@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+        <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    </head>
+    <body>
+        <py-config>
+            packages = ["pandas", "seaborn"]
+
+            [[fetch]]
+            files = ["analytics.py"]
+        </py-config>
+        <py-script>
+            from pyodide.http import open_url
+
+            import analytics
+
+            file = open_url("https://files.carberra.xyz/resources/pyscript/jan23.csv")
+            fig = analytics.plot(file)
+            display(fig, target="graph", append=False)
+        </py-script>
+
+        <h1>Analytics data - Jan 2023</h1>
+        <div id="graph"></div>
+    </body>
+</html>
