@@ -1,0 +1,80 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+exclude = "tests"
+
+[tool.len8]
+exclude = ["tests", "analytix/ux.py"]
+code-length = 88
+
+[tool.coverage.report]
+omit = ["analytix/__init__.py", "analytix/__main__.py", "analytix/types.py", "analytix/ux.py"]
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "if t.TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "return NotImplemented",
+    "except KeyboardInterrupt as exc",
+    "except ImportError:",
+    # These are run depending on current Python version
+    "from dateutil.parser import parse as du_parse",
+    "du_parse = dt.datetime.fromisoformat",
+]
+
+[tool.ruff]
+show-fixes = true
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-select = [
+    "B",
+    "BLE",
+    "C4",
+    "COM",
+    # "CPY",
+    "E",
+    "ERA",
+    "FBT",
+    "FLY",
+    "G",
+    "I",
+    "ICN",
+    "INP",
+    "ISC",
+    "LOG",
+    "N",
+    "NPY",
+    "PERF",
+    "PGH",
+    "PIE",
+    # "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLF",
+    "SLOT",
+    "T10",
+    "T20",
+    "TCH",
+    "TID",
+    "UP",
+    "YTT",
+]
+ignore = ["E402", "B905", "N818", "S101"]
+
+[tool.ruff.lint.isort]
+force-single-line = true

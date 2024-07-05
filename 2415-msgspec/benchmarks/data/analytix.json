@@ -1,0 +1,2840 @@
+{
+  "info": {
+    "author": "Ethan Henderson",
+    "bugtrack_url": null,
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Environment :: Console",
+      "Intended Audience :: Developers",
+      "Intended Audience :: End Users/Desktop",
+      "License :: OSI Approved :: BSD License",
+      "Natural Language :: English",
+      "Operating System :: MacOS",
+      "Operating System :: Microsoft :: Windows",
+      "Operating System :: OS Independent",
+      "Operating System :: POSIX",
+      "Operating System :: Unix",
+      "Programming Language :: Python :: 3",
+      "Programming Language :: Python :: 3 :: Only",
+      "Programming Language :: Python :: 3.10",
+      "Programming Language :: Python :: 3.11",
+      "Programming Language :: Python :: 3.12",
+      "Programming Language :: Python :: 3.13",
+      "Programming Language :: Python :: 3.8",
+      "Programming Language :: Python :: 3.9",
+      "Programming Language :: Python :: Implementation :: CPython",
+      "Programming Language :: Python :: Implementation :: PyPy",
+      "Topic :: Internet",
+      "Topic :: Scientific/Engineering :: Information Analysis",
+      "Topic :: Utilities",
+      "Typing :: Typed"
+    ],
+    "description": "#\n\n<div align=\"center\">\n<img alt=\"analytix logo\" src=\"https://raw.githubusercontent.com/parafoxia/analytix/main/assets/logo.png\" width=\"400px\">\n<br /><br />\nA simple yet powerful SDK for the YouTube Analytics API.\n<br /><br />\n<a href=\"https://pypi.python.org/pypi/analytix\"><img alt=\"PyPI - Version\" src=\"https://img.shields.io/pypi/v/analytix\"></a>\n<a href=\"https://pypi.python.org/pypi/analytix\"><img alt=\"PyPI - Python Version\" src=\"https://img.shields.io/pypi/pyversions/analytix\"></a>\n<a href=\"https://pypi.python.org/pypi/analytix\"><img alt=\"PyPI - Implementation\" src=\"https://img.shields.io/pypi/implementation/analytix\"></a>\n<a href=\"https://pepy.tech/project/analytix\"><img alt=\"Downloads\" src=\"https://static.pepy.tech/badge/analytix\"></a>\n<br />\n<a href=\"https://github.com/parafoxia/analytix\"><img alt=\"GitHub Workflow Status (CI)\" src=\"https://img.shields.io/github/actions/workflow/status/parafoxia/analytix/ci.yml\"></a>\n<a href=\"https://parafoxia.github.io/analytix\"><img alt=\"GitHub Workflow Status (Publish Docs)\" src=\"https://img.shields.io/github/actions/workflow/status/parafoxia/analytix/publish-docs.yml?label=docs\"></a>\n<a href=\"https://github.com/parafoxia/analytix\"><img alt=\"Code Climate coverage\" src=\"https://img.shields.io/codeclimate/coverage/parafoxia/analytix\"></a>\n<a href=\"https://github.com/parafoxia/analytix\"><img alt=\"Code Climate maintainability\" src=\"https://img.shields.io/codeclimate/maintainability/parafoxia/analytix\"></a>\n<hr />\n</div>\n\n## Features\n\n* Pythonic syntax lets you feel right at home\n* Dynamic error handling saves hours of troubleshooting and makes sure only valid requests count toward your API quota\n* A clever interface allows you to make multiple requests across multiple sessions without reauthorising\n* Extra support enables you to export reports in a variety of filetypes and to a number of DataFrame formats\n* Easy enough for beginners, but powerful enough for advanced users\n\n## Installation\n\n### Installing analytix\n\nTo install the latest stable version of analytix, use the following command:\n\n```sh\npip install analytix\n```\n\nYou can also install the latest development version using the following command:\n\n```sh\npip install git+https://github.com/parafoxia/analytix\n```\n\nYou may need to prefix these commands with a call to the Python interpreter depending on your OS and Python configuration.\n\n### Dependencies\n\nBelow is a list of analytix's dependencies.\nNote that the minimum version assumes you're using CPython 3.8.\nThe latest versions of each library are always supported.\n\n| Name              | Min. version | Required? | Usage                                                         | \n|-------------------|--------------|-----------|---------------------------------------------------------------|\n| `urllib3`         | 1.10.0       | Yes       | Making HTTP requests                                          |\n| `jwt`             | 1.2.0        | No        | Decoding JWT ID tokens (from v5.1)                            |\n| `openpyxl`        | 3.0.0        | No        | Exporting report data to Excel spreadsheets                   |\n| `pandas`          | ~1.3.0       | No        | Exporting report data to pandas DataFrames                    |\n| `polars`          | 0.15.17      | No        | Exporting report data to Polars DataFrames                    |\n| `pyarrow`         | ~5.0.0       | No        | Exporting report data to Apache Arrow tables and file formats |\n\n## OAuth authentication\n\nAll requests to the YouTube Analytics API need to be authorised through OAuth 2.\nIn order to do this, you will need a Google Developers project with the YouTube Analytics API enabled.\nYou can find instructions on how to do that in the [API setup guide](https://parafoxia.github.io/analytix/starting/googleapp/).\n\nOnce a project is set up, analytix handles authorisation — including token refreshing — for you.\n\nMore details regarding how and when refresh tokens expire can be found on the [Google Identity documentation](https://developers.google.com/identity/protocols/oauth2#expiration).\n\n## Usage\n\n### Retrieving reports\n\nThe following example creates a CSV file containing basic info for the 10 most viewed videos, from most to least viewed, in the US in 2022:\n\n```py\nfrom datetime import date\n\nfrom analytix import Client\n\nclient = Client(\"secrets.json\")\nreport = client.fetch_report(\n    dimensions=(\"video\",),\n    filters={\"country\": \"US\"},\n    metrics=(\"estimatedMinutesWatched\", \"views\", \"likes\", \"comments\"),\n    sort_options=(\"-estimatedMinutesWatched\",),\n    start_date=date(2022, 1, 1),\n    end_date=date(2022, 12, 31),\n    max_results=10,\n)\nreport.to_csv(\"analytics.csv\")\n```\n\nIf you want to analyse this data using additional tools such as *pandas*, you can directly export the report as a DataFrame or table using the `to_pandas()`, `to_arrow()`, and `to_polars()` methods of the report instance.\nYou can also save the report as a `.tsv`, `.json`, `.xlsx`, `.parquet`, or `.feather` file.\n\nThere are more examples in the [GitHub repository](https://github.com/parafoxia/analytix/tree/main/examples).\n\n### Fetching group information\n\nYou can also fetch groups and group items:\n\n```py\nfrom analytix import Client\n\n# You can also use the client as context manager!\nwith Client(\"secrets.json\") as client:\n    groups = client.fetch_groups()\n    group_items = client.fetch_group_items(groups[0].id)\n```\n\n### Logging\n\nIf you want to see what analytix is doing, you can enable the packaged logger:\n\n```py\nimport analytix\n\nanalytix.enable_logging()\n```\n\nThis defaults to showing all log messages of level INFO and above.\nTo show more (or less) messages, pass a logging level as an argument.\n\n## Compatibility\n\nCPython versions 3.8 through 3.12 and PyPy versions 3.9 and 3.10 are officially supported\\*.\nCPython 3.13-dev is provisionally supported\\*.\nWindows, MacOS, and Linux are all supported.\n\n*For base analytix functionality; support cannot be guaranteed for functionality requiring external libraries.\n\n## Contributing\n\nContributions are very much welcome! To get started:\n\n* Familiarise yourself with the [code of conduct](https://github.com/parafoxia/analytix/blob/main/CODE_OF_CONDUCT.md)\n* Have a look at the [contributing guide](https://github.com/parafoxia/analytix/blob/main/CONTRIBUTING.md)\n\n## License\n\nThe analytix module for Python is licensed under the [BSD 3-Clause License](https://github.com/parafoxia/analytix/blob/main/LICENSE).\n",
+    "description_content_type": "text/markdown",
+    "docs_url": null,
+    "download_url": null,
+    "downloads": { "last_day": -1, "last_month": -1, "last_week": -1 },
+    "dynamic": null,
+    "home_page": "https://github.com/parafoxia/analytix",
+    "keywords": null,
+    "license": "BSD 3-Clause 'New' or 'Revised' License",
+    "maintainer": null,
+    "maintainer_email": null,
+    "name": "analytix",
+    "package_url": "https://pypi.org/project/analytix/",
+    "platform": null,
+    "project_url": "https://pypi.org/project/analytix/",
+    "project_urls": {
+      "Bug Tracker": "https://github.com/parafoxia/analytix/issues",
+      "CI": "https://github.com/parafoxia/analytix/actions",
+      "Changelog": "https://github.com/parafoxia/analytix/releases",
+      "Documentation": "https://parafoxia.github.io/analytix",
+      "Homepage": "https://github.com/parafoxia/analytix",
+      "Source": "https://github.com/parafoxia/analytix"
+    },
+    "provides_extra": null,
+    "release_url": "https://pypi.org/project/analytix/5.2.1/",
+    "requires_dist": ["urllib3<3.0,>=1.10"],
+    "requires_python": "<3.14,>=3.8.0",
+    "summary": "A simple yet powerful SDK for the YouTube Analytics API.",
+    "version": "5.2.1",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "last_serial": 23510977,
+  "releases": {
+    "0.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "ecf878d3969b5c9cb59465bce46edd68547757879b2d1a1d7171f7eea290813f",
+          "md5": "61f2e336587af8264475463e96b8d2ac",
+          "sha256": "042494782a0fe8a7c1c148f5d386378afe53ef743cb8d2ac589834b98e2c746d"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "61f2e336587af8264475463e96b8d2ac",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6",
+        "size": 10253,
+        "upload_time": "2021-01-30T23:45:30",
+        "upload_time_iso_8601": "2021-01-30T23:45:30.226411Z",
+        "url": "https://files.pythonhosted.org/packages/ec/f8/78d3969b5c9cb59465bce46edd68547757879b2d1a1d7171f7eea290813f/analytix-0.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "67dc38d23fed4db3905a708036f4aa990a1736eb12713385e4c18c572050f7e6",
+          "md5": "bc2b6e9003908713e8ef12d923f607c9",
+          "sha256": "d3e02125b9c27bb4f19454b7c851e923636ed84e039302faf9e3637ac67e2b4b"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "bc2b6e9003908713e8ef12d923f607c9",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6",
+        "size": 8943,
+        "upload_time": "2021-01-30T23:45:31",
+        "upload_time_iso_8601": "2021-01-30T23:45:31.515310Z",
+        "url": "https://files.pythonhosted.org/packages/67/dc/38d23fed4db3905a708036f4aa990a1736eb12713385e4c18c572050f7e6/analytix-0.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "0.1.0a1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "bb92e44aa409f022778caade0dc662b5a2d1e82d6986f0d56bf6c87d522ebd9b",
+          "md5": "436c2b719750f0f4178d0cd76c1515d3",
+          "sha256": "3d0f15c1b8becc45cb7e3e3ed18fefbfbb5652c6ec359e9b2877a9e69a7ab09f"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0a1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "436c2b719750f0f4178d0cd76c1515d3",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6",
+        "size": 8261,
+        "upload_time": "2021-01-29T00:57:42",
+        "upload_time_iso_8601": "2021-01-29T00:57:42.100659Z",
+        "url": "https://files.pythonhosted.org/packages/bb/92/e44aa409f022778caade0dc662b5a2d1e82d6986f0d56bf6c87d522ebd9b/analytix-0.1.0a1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "d0705a0df9d63d753a2f4008575c5698b420b58cfb7223a202927e85a7456279",
+          "md5": "a28bdd9cc2929d65827155afc69b499a",
+          "sha256": "940952896e61eb38bb7f17feea4e7753ca794b56578a07fcae42af68423d3ada"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0a1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "a28bdd9cc2929d65827155afc69b499a",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6",
+        "size": 6994,
+        "upload_time": "2021-01-29T00:57:43",
+        "upload_time_iso_8601": "2021-01-29T00:57:43.314193Z",
+        "url": "https://files.pythonhosted.org/packages/d0/70/5a0df9d63d753a2f4008575c5698b420b58cfb7223a202927e85a7456279/analytix-0.1.0a1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "0.1.0a2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f27255ecd737daa16d906e797855af2d9fd61575ad04379b7e615e9396f162c1",
+          "md5": "a60ca6e4ada33dc875487ada3295b967",
+          "sha256": "10fb94a7ff3fd040dbfb4126f5855d6ac73bdb3f99d1a29ffcc6286ec14ecb96"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0a2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "a60ca6e4ada33dc875487ada3295b967",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6",
+        "size": 10099,
+        "upload_time": "2021-01-29T21:32:11",
+        "upload_time_iso_8601": "2021-01-29T21:32:11.556580Z",
+        "url": "https://files.pythonhosted.org/packages/f2/72/55ecd737daa16d906e797855af2d9fd61575ad04379b7e615e9396f162c1/analytix-0.1.0a2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "3eba2e7da85f30bf725807f13a3ca8bb1bd1c53ad5748d7578fb8ae01235ae18",
+          "md5": "e555166855f26be3e123427fca65cadb",
+          "sha256": "d6995110c81d7edf76e1cae90adf753ccb6bbd0b583d301444f42a52d12ed35e"
+        },
+        "downloads": -1,
+        "filename": "analytix-0.1.0a2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "e555166855f26be3e123427fca65cadb",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6",
+        "size": 8694,
+        "upload_time": "2021-01-29T21:32:13",
+        "upload_time_iso_8601": "2021-01-29T21:32:13.105180Z",
+        "url": "https://files.pythonhosted.org/packages/3e/ba/2e7da85f30bf725807f13a3ca8bb1bd1c53ad5748d7578fb8ae01235ae18/analytix-0.1.0a2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5f105394cf0fc928e32a3f94ba124f8fa6ae91f09181a6987c69261ac793bcae",
+          "md5": "40068105ed556073bf3d1e0bbcf69257",
+          "sha256": "cdd44151925b618265823a7efa1b54381905efe2ee5ab1036fde6cc059cfb9a0"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "40068105ed556073bf3d1e0bbcf69257",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 14342,
+        "upload_time": "2021-03-07T18:43:24",
+        "upload_time_iso_8601": "2021-03-07T18:43:24.709684Z",
+        "url": "https://files.pythonhosted.org/packages/5f/10/5394cf0fc928e32a3f94ba124f8fa6ae91f09181a6987c69261ac793bcae/analytix-1.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "64a03984641c1492aad46eb130461e4d870b993239b40ad56f712ceb4481828c",
+          "md5": "f1c11f09d43d26c819ef65e9cc14d947",
+          "sha256": "9287c7b25e750c3d9e2b4549e08a19b166af634c98afb53f83fc72959c6536dd"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "f1c11f09d43d26c819ef65e9cc14d947",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 11759,
+        "upload_time": "2021-03-07T18:43:25",
+        "upload_time_iso_8601": "2021-03-07T18:43:25.927616Z",
+        "url": "https://files.pythonhosted.org/packages/64/a0/3984641c1492aad46eb130461e4d870b993239b40ad56f712ceb4481828c/analytix-1.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.0.0rc1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "27c309b948c3b8862c390b28dbc5267e41d11d13ffe774e3645c945253fdc55c",
+          "md5": "4f3612aa076f24e617b2cd57cf9be777",
+          "sha256": "b8ba2ef214712d18fdac00364b55e9493e1edd67f1b6462713cc50f922c307ba"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.0rc1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "4f3612aa076f24e617b2cd57cf9be777",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 14083,
+        "upload_time": "2021-03-07T03:04:28",
+        "upload_time_iso_8601": "2021-03-07T03:04:28.488743Z",
+        "url": "https://files.pythonhosted.org/packages/27/c3/09b948c3b8862c390b28dbc5267e41d11d13ffe774e3645c945253fdc55c/analytix-1.0.0rc1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "4d841839fa873e2ca8282e27c7083ec6175ca0f406b891fb9f64d0269ff21856",
+          "md5": "4f78e5ab8274c3f8c18ab34082ca6afc",
+          "sha256": "2290b7afb0491e1ff8323837783987dcb676ac4c9483ee2f144557451d3a33f4"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.0rc1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "4f78e5ab8274c3f8c18ab34082ca6afc",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 11352,
+        "upload_time": "2021-03-07T03:04:29",
+        "upload_time_iso_8601": "2021-03-07T03:04:29.614319Z",
+        "url": "https://files.pythonhosted.org/packages/4d/84/1839fa873e2ca8282e27c7083ec6175ca0f406b891fb9f64d0269ff21856/analytix-1.0.0rc1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.0.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "65b0c3f28d24fc7adc9c8c00965a08426e634b3a9ebef1098784ab8f298bca37",
+          "md5": "6455e60b3b8d8fc9c091f5b88e4d4a42",
+          "sha256": "b218a820d33e8c1d5cd6b80a11b309d7e4d36d12b5b7dad859bd2f41def3c84b"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "6455e60b3b8d8fc9c091f5b88e4d4a42",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 14316,
+        "upload_time": "2021-03-09T19:46:31",
+        "upload_time_iso_8601": "2021-03-09T19:46:31.642799Z",
+        "url": "https://files.pythonhosted.org/packages/65/b0/c3f28d24fc7adc9c8c00965a08426e634b3a9ebef1098784ab8f298bca37/analytix-1.0.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "00036d7b65839f9e624806404502abaf2ce2d6704a0f42db229641470f7ea8ef",
+          "md5": "298b0ed43e521419df9dffa4902b16a9",
+          "sha256": "8a45c2c4de61fd3935748e2a314018c0e643a96a0b8f8b51e81bfe48e8b569f0"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "298b0ed43e521419df9dffa4902b16a9",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 11731,
+        "upload_time": "2021-03-09T19:46:32",
+        "upload_time_iso_8601": "2021-03-09T19:46:32.898908Z",
+        "url": "https://files.pythonhosted.org/packages/00/03/6d7b65839f9e624806404502abaf2ce2d6704a0f42db229641470f7ea8ef/analytix-1.0.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.0.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5091beb2fb3e77357517b46f078f981f517337ec973c38072b1dc87cf85d05cf",
+          "md5": "d1335d2564f57bf5067448c23e21fa33",
+          "sha256": "10ed0cd9281fbcc84d1d9df2cf0b4622b71dce489906fd1d7b6e9a64becb43fe"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "d1335d2564f57bf5067448c23e21fa33",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 14317,
+        "upload_time": "2021-03-09T21:50:37",
+        "upload_time_iso_8601": "2021-03-09T21:50:37.972122Z",
+        "url": "https://files.pythonhosted.org/packages/50/91/beb2fb3e77357517b46f078f981f517337ec973c38072b1dc87cf85d05cf/analytix-1.0.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f308eb7150f36a5a0b617d16e4e9a060fdc06afc1e1c49d0dc45374b511ca74a",
+          "md5": "8d41c6ab9d9ec4ac86bbbb39dd30a365",
+          "sha256": "8283fd9a4fd58f3a5de05b72da40a9be1f99c8aa158849f24221a160f58b6095"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.0.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "8d41c6ab9d9ec4ac86bbbb39dd30a365",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 11712,
+        "upload_time": "2021-03-09T21:50:39",
+        "upload_time_iso_8601": "2021-03-09T21:50:39.490180Z",
+        "url": "https://files.pythonhosted.org/packages/f3/08/eb7150f36a5a0b617d16e4e9a060fdc06afc1e1c49d0dc45374b511ca74a/analytix-1.0.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "0da1d8b2438a656c6db2a913950e06e8bbaf9de99db35078475d39c6145bf331",
+          "md5": "6b316c547983afa1c9bdef27b7a40421",
+          "sha256": "c1c2114c1e99be3e22cb31ca67cb2f951d1f6ffd2478dceeb6ef0906380d6062"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "6b316c547983afa1c9bdef27b7a40421",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 15028,
+        "upload_time": "2021-03-10T22:02:24",
+        "upload_time_iso_8601": "2021-03-10T22:02:24.718183Z",
+        "url": "https://files.pythonhosted.org/packages/0d/a1/d8b2438a656c6db2a913950e06e8bbaf9de99db35078475d39c6145bf331/analytix-1.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "78d82e393c1c9e4b9e0e31b82b7579641b3d4aa3ea49f5152a9caaebdbef7c08",
+          "md5": "b1a999bf7ba3c9345212f1f737cd52e2",
+          "sha256": "ed08e2a042e1d3f09caf7bd8804a0663bec4895c29df86983d6976af6da4f267"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "b1a999bf7ba3c9345212f1f737cd52e2",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 12484,
+        "upload_time": "2021-03-10T22:02:25",
+        "upload_time_iso_8601": "2021-03-10T22:02:25.985760Z",
+        "url": "https://files.pythonhosted.org/packages/78/d8/2e393c1c9e4b9e0e31b82b7579641b3d4aa3ea49f5152a9caaebdbef7c08/analytix-1.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.1.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a1aae2e14c933a0752bd9da2add638263160ee7294075a7f3e04621810a470c1",
+          "md5": "857f0789ed759854b4eb19f43001a732",
+          "sha256": "323ef17859637284e5dd2d4146dc21a7642681eb802a0e06d096b7ff7c9eee6b"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.1.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "857f0789ed759854b4eb19f43001a732",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 15032,
+        "upload_time": "2021-03-21T20:47:55",
+        "upload_time_iso_8601": "2021-03-21T20:47:55.750121Z",
+        "url": "https://files.pythonhosted.org/packages/a1/aa/e2e14c933a0752bd9da2add638263160ee7294075a7f3e04621810a470c1/analytix-1.1.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "e6f4e59f27af3dac54c54c240add3b8e6a36bdf868f983ea9bb3b328e0e7c0af",
+          "md5": "59855347566a2c758d0627ea4b7a9e95",
+          "sha256": "45af394f210dc6a6c9b67731086b75837d2eb63b238b8d52aca49cd29bc47482"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.1.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "59855347566a2c758d0627ea4b7a9e95",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 12501,
+        "upload_time": "2021-03-21T20:47:57",
+        "upload_time_iso_8601": "2021-03-21T20:47:57.194770Z",
+        "url": "https://files.pythonhosted.org/packages/e6/f4/e59f27af3dac54c54c240add3b8e6a36bdf868f983ea9bb3b328e0e7c0af/analytix-1.1.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.2.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "8f8aa75fd3b96523c6c0ad4f84d8e61dee858de5be62fc6eb5c5532b98efb23d",
+          "md5": "3275d87203fe9dae49075de31455495d",
+          "sha256": "7bdab4976a6c61681faa67d777619b141a394058ec3ef2b21b6e1b552b475d30"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "3275d87203fe9dae49075de31455495d",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 15319,
+        "upload_time": "2021-04-28T02:38:02",
+        "upload_time_iso_8601": "2021-04-28T02:38:02.553563Z",
+        "url": "https://files.pythonhosted.org/packages/8f/8a/a75fd3b96523c6c0ad4f84d8e61dee858de5be62fc6eb5c5532b98efb23d/analytix-1.2.0-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Broken"
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "d66051679990de321218efc4c2d7c747613ff35550fd5a5ffcd5b59ae4047467",
+          "md5": "54ace0c228e1cbb94d15e7f6776402ac",
+          "sha256": "e9dfb09f08425868623c8b70ec51d6ab6062441e360027f903e32c04f40631b2"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "54ace0c228e1cbb94d15e7f6776402ac",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 13635,
+        "upload_time": "2021-04-28T02:38:04",
+        "upload_time_iso_8601": "2021-04-28T02:38:04.256465Z",
+        "url": "https://files.pythonhosted.org/packages/d6/60/51679990de321218efc4c2d7c747613ff35550fd5a5ffcd5b59ae4047467/analytix-1.2.0.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Broken"
+      }
+    ],
+    "1.2.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "4ada739e5c3729d527e571dfc1a85ad60196e153c2bf9c87e50f736b9a2d01fa",
+          "md5": "152ebec72cf1a8c6bc2669f561129b9a",
+          "sha256": "56a59d33ff100b66985083783d6678870a75a131019079d6b07dbca1ce0b298e"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "152ebec72cf1a8c6bc2669f561129b9a",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 23477,
+        "upload_time": "2021-05-13T23:24:33",
+        "upload_time_iso_8601": "2021-05-13T23:24:33.715595Z",
+        "url": "https://files.pythonhosted.org/packages/4a/da/739e5c3729d527e571dfc1a85ad60196e153c2bf9c87e50f736b9a2d01fa/analytix-1.2.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6033a1fd75f4f45dca4a8a09a228c3ba442d929d21e040fb33206805173e2b69",
+          "md5": "2ecdeb386633883bab6d7d3b45277dcb",
+          "sha256": "0f00e9aee09c892d285ca0700be08eb6eb67059654a57e128cb749f840af591c"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "2ecdeb386633883bab6d7d3b45277dcb",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 13580,
+        "upload_time": "2021-05-13T23:24:35",
+        "upload_time_iso_8601": "2021-05-13T23:24:35.031271Z",
+        "url": "https://files.pythonhosted.org/packages/60/33/a1fd75f4f45dca4a8a09a228c3ba442d929d21e040fb33206805173e2b69/analytix-1.2.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "1.2.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "ced8d90c4883d4c5ef9525566c997a08439653290214acc730a215b875f31792",
+          "md5": "c6576985151ffb81ca1682ab68b31a06",
+          "sha256": "c8761f17a7a527fe936f48cfa87c258221c156fddfa03b549aa18d7a33fe8e95"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "c6576985151ffb81ca1682ab68b31a06",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.1",
+        "size": 13186,
+        "upload_time": "2021-07-23T15:35:35",
+        "upload_time_iso_8601": "2021-07-23T15:35:35.893527Z",
+        "url": "https://files.pythonhosted.org/packages/ce/d8/d90c4883d4c5ef9525566c997a08439653290214acc730a215b875f31792/analytix-1.2.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f251f597d1d4b91474593f3266cfd5cc439f5173f4448c7e5e077bf8b68ec8a3",
+          "md5": "53007d4beae23768059399e37d780532",
+          "sha256": "0bfc71734db821c56063d2982de1d0b8793b22bde8a7d9928f4fd54faec668b2"
+        },
+        "downloads": -1,
+        "filename": "analytix-1.2.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "53007d4beae23768059399e37d780532",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.1",
+        "size": 13449,
+        "upload_time": "2021-07-23T15:35:37",
+        "upload_time_iso_8601": "2021-07-23T15:35:37.052687Z",
+        "url": "https://files.pythonhosted.org/packages/f2/51/f597d1d4b91474593f3266cfd5cc439f5173f4448c7e5e077bf8b68ec8a3/analytix-1.2.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "ea0251943ccebf77db9a8c164a8691e47faf6d454b63bfc17ebd8994486d7a45",
+          "md5": "d26e8252266de648e9481ecb8ab7a35a",
+          "sha256": "6a605c6f8bcc45853272ef094a5ab6c39408b8d0aedfa0a49dfd21bb128984ea"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "d26e8252266de648e9481ecb8ab7a35a",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 18985,
+        "upload_time": "2021-07-25T02:42:30",
+        "upload_time_iso_8601": "2021-07-25T02:42:30.677120Z",
+        "url": "https://files.pythonhosted.org/packages/ea/02/51943ccebf77db9a8c164a8691e47faf6d454b63bfc17ebd8994486d7a45/analytix-2.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "79e430e1e3ec8503fc6097549cc68a02bf889a26b6bcc66cff31134dbba7e292",
+          "md5": "fb58ed28a094f91e20c465f47d1f783f",
+          "sha256": "eb390460d59b223846d7c589208ed91ed8d0204128012c025404ad5c23c913e7"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "fb58ed28a094f91e20c465f47d1f783f",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 19058,
+        "upload_time": "2021-07-25T02:42:32",
+        "upload_time_iso_8601": "2021-07-25T02:42:32.106185Z",
+        "url": "https://files.pythonhosted.org/packages/79/e4/30e1e3ec8503fc6097549cc68a02bf889a26b6bcc66cff31134dbba7e292/analytix-2.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.0.0.dev1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "782abb7bc672fa865adde48b1018db3ace20a356ab99ddd5d80f498164a3a310",
+          "md5": "1d12bb8656fd089b7226d86c8624bc55",
+          "sha256": "a8ee1fb25d23b35e4d545c8e729e305294a836ac09f9acd2891f4c8f6eadd14d"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "1d12bb8656fd089b7226d86c8624bc55",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 20566,
+        "upload_time": "2021-05-09T01:22:01",
+        "upload_time_iso_8601": "2021-05-09T01:22:01.055562Z",
+        "url": "https://files.pythonhosted.org/packages/78/2a/bb7bc672fa865adde48b1018db3ace20a356ab99ddd5d80f498164a3a310/analytix-2.0.0.dev1-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "315c0bc429cacf647c5566d01b235a5bc2ad5b3cae61f384d8ca3b6eb435ffd7",
+          "md5": "61fb6f07798d7d1b209a3f5e3e4cb2bd",
+          "sha256": "d7623254c665c34ee874eb0a62d699f92f4ae8ebab3fcf4ca649360ed0783a76"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "61fb6f07798d7d1b209a3f5e3e4cb2bd",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 17710,
+        "upload_time": "2021-05-09T01:22:03",
+        "upload_time_iso_8601": "2021-05-09T01:22:03.032936Z",
+        "url": "https://files.pythonhosted.org/packages/31/5c/0bc429cacf647c5566d01b235a5bc2ad5b3cae61f384d8ca3b6eb435ffd7/analytix-2.0.0.dev1.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      }
+    ],
+    "2.0.0.dev2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "99312a243721dca78ef474f188dea11d708f0aedddcb6a39e5d8c1fedcb1cb23",
+          "md5": "f279bb84819ebfb7760e298d7494397e",
+          "sha256": "e8b52c90b7029830c417ace8f03b6cbb7ea42c277b58ad533f986c8426a046fe"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "f279bb84819ebfb7760e298d7494397e",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 20563,
+        "upload_time": "2021-05-13T22:49:58",
+        "upload_time_iso_8601": "2021-05-13T22:49:58.393403Z",
+        "url": "https://files.pythonhosted.org/packages/99/31/2a243721dca78ef474f188dea11d708f0aedddcb6a39e5d8c1fedcb1cb23/analytix-2.0.0.dev2-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "bd5ccbf56a0d1456f6827eebc0bbde335ac2bebd7b64f279eb9b3ed3c62fe8ce",
+          "md5": "c94415a1904855f02b56619cd269e944",
+          "sha256": "e88044cc1424b8ff9b8907c67f213dba7afb7a8822aaa53a1b402799ece23751"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "c94415a1904855f02b56619cd269e944",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 17697,
+        "upload_time": "2021-05-13T22:49:59",
+        "upload_time_iso_8601": "2021-05-13T22:49:59.681938Z",
+        "url": "https://files.pythonhosted.org/packages/bd/5c/cbf56a0d1456f6827eebc0bbde335ac2bebd7b64f279eb9b3ed3c62fe8ce/analytix-2.0.0.dev2.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      }
+    ],
+    "2.0.0.dev3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7b94cf52165be49d592df3f2911a189041b8c3bdea8c4451c1741fb633c0df3c",
+          "md5": "637f1c76b9d45ebffdec3bcf6e5c3995",
+          "sha256": "5d4474b93b0ff8df609d38942778608182926fa5da62b07c1b21a11532473c05"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev3-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "637f1c76b9d45ebffdec3bcf6e5c3995",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 21117,
+        "upload_time": "2021-05-14T00:21:08",
+        "upload_time_iso_8601": "2021-05-14T00:21:08.910937Z",
+        "url": "https://files.pythonhosted.org/packages/7b/94/cf52165be49d592df3f2911a189041b8c3bdea8c4451c1741fb633c0df3c/analytix-2.0.0.dev3-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "b9fd0696c606c9491e4ad5bdeef524bef1d5b302055d9b967852cbbff0e86afd",
+          "md5": "58d42663942cc995a8c9e0c99a3bddf4",
+          "sha256": "c945a70dffdc04188cf14e8c6d996c81f1992e342c5dcd87cce21a0b048fb059"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev3.tar.gz",
+        "has_sig": false,
+        "md5_digest": "58d42663942cc995a8c9e0c99a3bddf4",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 17976,
+        "upload_time": "2021-05-14T00:21:10",
+        "upload_time_iso_8601": "2021-05-14T00:21:10.425469Z",
+        "url": "https://files.pythonhosted.org/packages/b9/fd/0696c606c9491e4ad5bdeef524bef1d5b302055d9b967852cbbff0e86afd/analytix-2.0.0.dev3.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Library has been written since. Use >=2.0.0.dev4 instead."
+      }
+    ],
+    "2.0.0.dev4": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "698324a15cec8360825d72b00365bb58382946531204e157efe32a28fd84e917",
+          "md5": "bd8cd6f3870a988a8d581fd9c93c5525",
+          "sha256": "d2d12a46f24ffceebcf328aae0dd2db95e96b254c61920059ec63eee1e4a04d5"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev4-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "bd8cd6f3870a988a8d581fd9c93c5525",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 17399,
+        "upload_time": "2021-07-23T11:56:06",
+        "upload_time_iso_8601": "2021-07-23T11:56:06.542223Z",
+        "url": "https://files.pythonhosted.org/packages/69/83/24a15cec8360825d72b00365bb58382946531204e157efe32a28fd84e917/analytix-2.0.0.dev4-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "46135fe8ac525ca53a6b3098ca561bb448a0eea750a495d2e691ab32aad960d7",
+          "md5": "cf143938fc200f2202cf07480991ccdb",
+          "sha256": "d843846a4f12501e7b6a9ffdf3af101053cf4fbbd8447ae466b7a05f99e2865a"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev4.tar.gz",
+        "has_sig": false,
+        "md5_digest": "cf143938fc200f2202cf07480991ccdb",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 17544,
+        "upload_time": "2021-07-23T11:56:07",
+        "upload_time_iso_8601": "2021-07-23T11:56:07.984575Z",
+        "url": "https://files.pythonhosted.org/packages/46/13/5fe8ac525ca53a6b3098ca561bb448a0eea750a495d2e691ab32aad960d7/analytix-2.0.0.dev4.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.0.0.dev5": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "fd2689a388a18e37002e670df3a8dff0b01cf76f9bf4fb3ed51acb4c9cfa7e63",
+          "md5": "433dd09c045d8de3b733114b5fb56236",
+          "sha256": "24eac5c5f6f1a62680ecd07910ad5fa55792f3aae534b25d687c93840331a0ab"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev5-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "433dd09c045d8de3b733114b5fb56236",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 17084,
+        "upload_time": "2021-07-23T18:37:54",
+        "upload_time_iso_8601": "2021-07-23T18:37:54.201788Z",
+        "url": "https://files.pythonhosted.org/packages/fd/26/89a388a18e37002e670df3a8dff0b01cf76f9bf4fb3ed51acb4c9cfa7e63/analytix-2.0.0.dev5-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "3e75a03fea6067e2caea6f913d90a6c73b18afaf277872f4921651e5d3746548",
+          "md5": "3fc013779d6b633c606c51a30eacd414",
+          "sha256": "7a6d6d631e23dc9858cc054032a9c23eab00b2f512652f6e3318ffe82e6221ec"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev5.tar.gz",
+        "has_sig": false,
+        "md5_digest": "3fc013779d6b633c606c51a30eacd414",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 16946,
+        "upload_time": "2021-07-23T18:37:55",
+        "upload_time_iso_8601": "2021-07-23T18:37:55.631881Z",
+        "url": "https://files.pythonhosted.org/packages/3e/75/a03fea6067e2caea6f913d90a6c73b18afaf277872f4921651e5d3746548/analytix-2.0.0.dev5.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.0.0.dev6": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "93ed050c3da9cd3e24552ef123bc8dd7454f79fd2794dfe40c01ff684b7665fe",
+          "md5": "5e58a36a33294dbe3d6e725c0d4162c1",
+          "sha256": "151eb1605892705c1723104913877117e1295ca1273691683ed00f9ca1307a82"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev6-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "5e58a36a33294dbe3d6e725c0d4162c1",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 17331,
+        "upload_time": "2021-07-24T15:42:01",
+        "upload_time_iso_8601": "2021-07-24T15:42:01.946786Z",
+        "url": "https://files.pythonhosted.org/packages/93/ed/050c3da9cd3e24552ef123bc8dd7454f79fd2794dfe40c01ff684b7665fe/analytix-2.0.0.dev6-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "16cae1e237c72b3c06cb797ff8747e57836f157d45916a8cdfad4cf6d3df1b0b",
+          "md5": "c26426e2b3bb6f772380f39c617b93dd",
+          "sha256": "117a635989216859be8d32461db275064267a4b513f3fa45f9400d067f2bcbe9"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev6.tar.gz",
+        "has_sig": false,
+        "md5_digest": "c26426e2b3bb6f772380f39c617b93dd",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 17361,
+        "upload_time": "2021-07-24T15:42:03",
+        "upload_time_iso_8601": "2021-07-24T15:42:03.318385Z",
+        "url": "https://files.pythonhosted.org/packages/16/ca/e1e237c72b3c06cb797ff8747e57836f157d45916a8cdfad4cf6d3df1b0b/analytix-2.0.0.dev6.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.0.0.dev7": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a95da4478dba0349158085d37b618450dec4238c65206d9c80cd6caf64804869",
+          "md5": "96083dc256bf9202b78feacab98e29df",
+          "sha256": "64ab2b07359409834c7bd699595052ac758f99d4f28fafd1641909e5354cb211"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev7-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "96083dc256bf9202b78feacab98e29df",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 25146,
+        "upload_time": "2021-07-25T01:45:45",
+        "upload_time_iso_8601": "2021-07-25T01:45:45.073441Z",
+        "url": "https://files.pythonhosted.org/packages/a9/5d/a4478dba0349158085d37b618450dec4238c65206d9c80cd6caf64804869/analytix-2.0.0.dev7-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "51081bb777ddb0cca3202094b088583227519fa96190fd471e7df6641d7695a1",
+          "md5": "863a6488d9739f3de8c8618110a1123f",
+          "sha256": "f81bfce984b8ccecd49b95a361a41c8af2f05cc200a9a9f8e59827a1c4ce4250"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.0.0.dev7.tar.gz",
+        "has_sig": false,
+        "md5_digest": "863a6488d9739f3de8c8618110a1123f",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 24350,
+        "upload_time": "2021-07-25T01:45:46",
+        "upload_time_iso_8601": "2021-07-25T01:45:46.796268Z",
+        "url": "https://files.pythonhosted.org/packages/51/08/1bb777ddb0cca3202094b088583227519fa96190fd471e7df6641d7695a1/analytix-2.0.0.dev7.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "246b81822ea8e546bb94274b5103f5d4ae45462bdd392b5fb186b8d5de4770c7",
+          "md5": "327ee69f7c9cc9ef066768bb7aa467f9",
+          "sha256": "4e25375b6e32054d77125cfd6baa8426b488f4a8bf5fa16d5fb6a7b0e86adf90"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "327ee69f7c9cc9ef066768bb7aa467f9",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 19864,
+        "upload_time": "2021-07-26T01:23:04",
+        "upload_time_iso_8601": "2021-07-26T01:23:04.112726Z",
+        "url": "https://files.pythonhosted.org/packages/24/6b/81822ea8e546bb94274b5103f5d4ae45462bdd392b5fb186b8d5de4770c7/analytix-2.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "dc6a304fe0442a746a1c0e90cea8172306c3e578f241774a444f9a51a10df190",
+          "md5": "76559ac05c6e344f95c6df4639495329",
+          "sha256": "17398e07c7e2fe07529779969c0f49ad2ee208cc44ae172851e7ca63716332c8"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "76559ac05c6e344f95c6df4639495329",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 20007,
+        "upload_time": "2021-07-26T01:23:05",
+        "upload_time_iso_8601": "2021-07-26T01:23:05.517096Z",
+        "url": "https://files.pythonhosted.org/packages/dc/6a/304fe0442a746a1c0e90cea8172306c3e578f241774a444f9a51a10df190/analytix-2.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.1.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "c537f415a03034bc01451660f9a36374f9c4abfb8281ef5f6978093b3b8f9d7e",
+          "md5": "4a744b4126996a33b7f839d9fe75f366",
+          "sha256": "bcbcb551e18dc0ca1722d9009d60e076e477b97f4fc8c9e542157cb33ec5774b"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.1.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "4a744b4126996a33b7f839d9fe75f366",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 20239,
+        "upload_time": "2021-07-27T10:15:31",
+        "upload_time_iso_8601": "2021-07-27T10:15:31.259948Z",
+        "url": "https://files.pythonhosted.org/packages/c5/37/f415a03034bc01451660f9a36374f9c4abfb8281ef5f6978093b3b8f9d7e/analytix-2.1.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "1d19c99c5021224fdf691040443d0ba2326b12106572ad8155b85f2058681f43",
+          "md5": "da996d076d01bdce60a2bb6a114e79eb",
+          "sha256": "ca4534b38ed17006fa4add154c6a33ec595b0e773c95bda6bdeb8fd6835deac4"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.1.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "da996d076d01bdce60a2bb6a114e79eb",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 20463,
+        "upload_time": "2021-07-27T10:15:32",
+        "upload_time_iso_8601": "2021-07-27T10:15:32.361728Z",
+        "url": "https://files.pythonhosted.org/packages/1d/19/c99c5021224fdf691040443d0ba2326b12106572ad8155b85f2058681f43/analytix-2.1.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.2.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "470861caf621cfeecf12891b442acae411d154704bdeb1257fe0a4c9acd65d4f",
+          "md5": "0dc2bc7bdb7a123d8fe4edcc2dab04a3",
+          "sha256": "a3418b7a0597441eb168c9711e4711807515318222ec414f0165fed174a7cae6"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.2.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "0dc2bc7bdb7a123d8fe4edcc2dab04a3",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 29753,
+        "upload_time": "2021-09-27T13:42:36",
+        "upload_time_iso_8601": "2021-09-27T13:42:36.436527Z",
+        "url": "https://files.pythonhosted.org/packages/47/08/61caf621cfeecf12891b442acae411d154704bdeb1257fe0a4c9acd65d4f/analytix-2.2.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7083c62599bbcdcc59ad46d33324afc00219e5127f0d629836879d64b84e9dbb",
+          "md5": "a2f6e9c3c55c3b3946c35f48cc82eea8",
+          "sha256": "d5a65609d4ebba2a6bdf6ffa4bf42b8ba7ea618a3944af81f84c1f205b83f2a6"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.2.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "a2f6e9c3c55c3b3946c35f48cc82eea8",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 21038,
+        "upload_time": "2021-09-27T13:42:38",
+        "upload_time_iso_8601": "2021-09-27T13:42:38.156903Z",
+        "url": "https://files.pythonhosted.org/packages/70/83/c62599bbcdcc59ad46d33324afc00219e5127f0d629836879d64b84e9dbb/analytix-2.2.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "2.2.0.post0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a9987f5211864f9ddc7fdef00edde501b791a26deb58197acc69424f529ad569",
+          "md5": "3c4ddcc6b875e516d3af1a90ed5d7d6d",
+          "sha256": "101d140df433aaaf8042f34f2008763840a1202057e1d956ae93028999d42fc3"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.2.0.post0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "3c4ddcc6b875e516d3af1a90ed5d7d6d",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.6.0",
+        "size": 29875,
+        "upload_time": "2021-11-13T17:25:35",
+        "upload_time_iso_8601": "2021-11-13T17:25:35.413647Z",
+        "url": "https://files.pythonhosted.org/packages/a9/98/7f5211864f9ddc7fdef00edde501b791a26deb58197acc69424f529ad569/analytix-2.2.0.post0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f3cfa4d0e6253663653b0d98f45c721cc6a602a7e1987eeceb96b5b13896a0d9",
+          "md5": "53b5dac8fd609d27dba8748342b0ae07",
+          "sha256": "da8ce96f7bce8e1d55a05f0c66c4df5286b57872463ec35b4e5d2e7d69912fde"
+        },
+        "downloads": -1,
+        "filename": "analytix-2.2.0.post0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "53b5dac8fd609d27dba8748342b0ae07",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.6.0",
+        "size": 21931,
+        "upload_time": "2021-11-13T17:25:36",
+        "upload_time_iso_8601": "2021-11-13T17:25:36.378617Z",
+        "url": "https://files.pythonhosted.org/packages/f3/cf/a4d0e6253663653b0d98f45c721cc6a602a7e1987eeceb96b5b13896a0d9/analytix-2.2.0.post0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "46e7d3d3924c179ccb89d13158dc0ea99ed1b767d83e404cad6f4f5f6392a645",
+          "md5": "d7747a374c4f171160e0571eb57587d1",
+          "sha256": "df19b2ac3a57de23f866b0b951ac76dcb78494bf7cb795d94ca8473031de22e0"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "d7747a374c4f171160e0571eb57587d1",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 44526,
+        "upload_time": "2022-03-15T18:36:35",
+        "upload_time_iso_8601": "2022-03-15T18:36:35.311616Z",
+        "url": "https://files.pythonhosted.org/packages/46/e7/d3d3924c179ccb89d13158dc0ea99ed1b767d83e404cad6f4f5f6392a645/analytix-3.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "0dd2a92c748b2d49d7aaf48669638e8e197ac0fe810a6e22431b90920ae12ef8",
+          "md5": "8e58c6fcca3228d7b4661c0bc495065d",
+          "sha256": "774bbb02bfeb0928216293894ff6480b02fcd0d8900cc93e8712cead14fc1e24"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "8e58c6fcca3228d7b4661c0bc495065d",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 30045,
+        "upload_time": "2022-03-15T18:36:36",
+        "upload_time_iso_8601": "2022-03-15T18:36:36.488908Z",
+        "url": "https://files.pythonhosted.org/packages/0d/d2/a92c748b2d49d7aaf48669638e8e197ac0fe810a6e22431b90920ae12ef8/analytix-3.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.0rc1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "0270a5b5dc77073906ccde4b9f0c056e96c7f449485ecf04a2cb7702289c5b33",
+          "md5": "6d834b422f7c0b262a0269daeee6f82d",
+          "sha256": "7a19881108eed8c1c7b48e33847b54341e05bb22c6aa45e3ba73c48cc9dba2e1"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "6d834b422f7c0b262a0269daeee6f82d",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 36699,
+        "upload_time": "2022-03-03T00:41:56",
+        "upload_time_iso_8601": "2022-03-03T00:41:56.204620Z",
+        "url": "https://files.pythonhosted.org/packages/02/70/a5b5dc77073906ccde4b9f0c056e96c7f449485ecf04a2cb7702289c5b33/analytix-3.0.0rc1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "121c0798fa4dbeb14b6d66725f1b1d74d6d28faf8fecddecea1987ca0d8418a8",
+          "md5": "d1aa05d59b6e8c6379f9eabe6e761a63",
+          "sha256": "59334770a7babace927c9ea5013b4c755b6f4779850f39a5494ac3473e5f5bb3"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "d1aa05d59b6e8c6379f9eabe6e761a63",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 25702,
+        "upload_time": "2022-03-03T00:41:57",
+        "upload_time_iso_8601": "2022-03-03T00:41:57.137642Z",
+        "url": "https://files.pythonhosted.org/packages/12/1c/0798fa4dbeb14b6d66725f1b1d74d6d28faf8fecddecea1987ca0d8418a8/analytix-3.0.0rc1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.0rc2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "9db5c0bae823d901bb659864935ec088799163068d40edf094765aadc1d14cab",
+          "md5": "a7b45bc19fc9065562d3c5981aa0553d",
+          "sha256": "278c67f3668ffba39735f629e32617e123337a19e9bb6a41ea7d46628ddaac8f"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "a7b45bc19fc9065562d3c5981aa0553d",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 43004,
+        "upload_time": "2022-03-08T00:02:02",
+        "upload_time_iso_8601": "2022-03-08T00:02:02.307672Z",
+        "url": "https://files.pythonhosted.org/packages/9d/b5/c0bae823d901bb659864935ec088799163068d40edf094765aadc1d14cab/analytix-3.0.0rc2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "66637ffe1d1ac96d2a4feed9462e89da46249dbf82a75a695d4d7d9d5ec399d0",
+          "md5": "c61eb4bbb301e846f44304132daeb226",
+          "sha256": "f024e258c5291b0dd228cc1d6b23e57a0411bfcf41003b68b9e7f5fc6180b4ce"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "c61eb4bbb301e846f44304132daeb226",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 28927,
+        "upload_time": "2022-03-08T00:02:03",
+        "upload_time_iso_8601": "2022-03-08T00:02:03.983766Z",
+        "url": "https://files.pythonhosted.org/packages/66/63/7ffe1d1ac96d2a4feed9462e89da46249dbf82a75a695d4d7d9d5ec399d0/analytix-3.0.0rc2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.0rc3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f86c7a175b59efac347c1b0770519cdb9ae9f899a0c1a491c66d877c50d02b2a",
+          "md5": "ba27d1040c7fdf74a436dd6a9cb2d760",
+          "sha256": "dc96915c6c25224038340fe1e3678c62dcb228e7a6962b5ad877475dd383340b"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc3-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "ba27d1040c7fdf74a436dd6a9cb2d760",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 43972,
+        "upload_time": "2022-03-13T17:38:58",
+        "upload_time_iso_8601": "2022-03-13T17:38:58.808623Z",
+        "url": "https://files.pythonhosted.org/packages/f8/6c/7a175b59efac347c1b0770519cdb9ae9f899a0c1a491c66d877c50d02b2a/analytix-3.0.0rc3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "e7c47b4818aa5309423feb5be8aa3189d71ad9b52b6560cbff3099e1859eaebc",
+          "md5": "b921ebb928dfb2f344db9f402ec54782",
+          "sha256": "026195d00847a516c249a8c3593000503327ffd86fb55ca1ecec9a90d5f2cf24"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.0rc3.tar.gz",
+        "has_sig": false,
+        "md5_digest": "b921ebb928dfb2f344db9f402ec54782",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 29457,
+        "upload_time": "2022-03-13T17:39:01",
+        "upload_time_iso_8601": "2022-03-13T17:39:01.662795Z",
+        "url": "https://files.pythonhosted.org/packages/e7/c4/7b4818aa5309423feb5be8aa3189d71ad9b52b6560cbff3099e1859eaebc/analytix-3.0.0rc3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "319a47d6d9c0812c8d5207151d151e78bbc38bf217fed7ca4c5e800730361edb",
+          "md5": "e3ccbb21c7fe4b30cea2b16d532f4795",
+          "sha256": "7e0044a895c408bde099b3983cc65fae8d96e86dfe763f85322d121ae30a0eff"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "e3ccbb21c7fe4b30cea2b16d532f4795",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 44710,
+        "upload_time": "2022-03-16T22:50:40",
+        "upload_time_iso_8601": "2022-03-16T22:50:40.231214Z",
+        "url": "https://files.pythonhosted.org/packages/31/9a/47d6d9c0812c8d5207151d151e78bbc38bf217fed7ca4c5e800730361edb/analytix-3.0.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "8656b70b0686874961113ea74802464b3b3fb98277638f5a23b7a64417eb0d73",
+          "md5": "69d8ea9106eca9591524ff6c600cd21c",
+          "sha256": "57d723b888546f3868c684baff68cc67c56993cd5cc31e216d85416a9cbcc41f"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.0.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "69d8ea9106eca9591524ff6c600cd21c",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 30252,
+        "upload_time": "2022-03-16T22:50:41",
+        "upload_time_iso_8601": "2022-03-16T22:50:41.567164Z",
+        "url": "https://files.pythonhosted.org/packages/86/56/b70b0686874961113ea74802464b3b3fb98277638f5a23b7a64417eb0d73/analytix-3.0.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "f6893bd77b61553f9aae5bdd6e453c5c536526fdab1a15a4f586e054f7c076c8",
+          "md5": "6b0da7a1b6e27606c7022f061b824d31",
+          "sha256": "e2367229271910e2d47c5fee23cc4c9a9fea5968502b18c99724104ada89364b"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "6b0da7a1b6e27606c7022f061b824d31",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 45854,
+        "upload_time": "2022-03-25T23:40:18",
+        "upload_time_iso_8601": "2022-03-25T23:40:18.304460Z",
+        "url": "https://files.pythonhosted.org/packages/f6/89/3bd77b61553f9aae5bdd6e453c5c536526fdab1a15a4f586e054f7c076c8/analytix-3.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "bcf9ef1efabc2444d459209bc49e4ef07fbb0cad9bc61b9f2021b7d0047915ed",
+          "md5": "3ec3535f176e5b4eebe08656f9a7501f",
+          "sha256": "cadaf7740e22e4142efeafb9b98d197f63f9fee0a223f6143a60c6fd17d0bafc"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "3ec3535f176e5b4eebe08656f9a7501f",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 31586,
+        "upload_time": "2022-03-25T23:40:19",
+        "upload_time_iso_8601": "2022-03-25T23:40:19.974117Z",
+        "url": "https://files.pythonhosted.org/packages/bc/f9/ef1efabc2444d459209bc49e4ef07fbb0cad9bc61b9f2021b7d0047915ed/analytix-3.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.2.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5ae36c902a55b7fd2229fac733954c05a3979d0f05b57c31fa0ce5b2acd75f4f",
+          "md5": "fb61f8bda624ca9cf2dc68637a8805ca",
+          "sha256": "d5d864d2a0c2ff4547e9a4eb59389bf28eb2ca80492c81e1350f834cc4e2c572"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.2.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "fb61f8bda624ca9cf2dc68637a8805ca",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 46308,
+        "upload_time": "2022-03-26T15:33:06",
+        "upload_time_iso_8601": "2022-03-26T15:33:06.246715Z",
+        "url": "https://files.pythonhosted.org/packages/5a/e3/6c902a55b7fd2229fac733954c05a3979d0f05b57c31fa0ce5b2acd75f4f/analytix-3.2.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6cb3deb73e2420ac96abb1f922a8b86259c375fd5c49f8a57a4d674a76845cdf",
+          "md5": "85c768da542fbbd1e1942fedf23054a7",
+          "sha256": "5db398ebb9c23c3e025abb8b3f0d8ee7ab79bb17d2b75fdd1555f2d924574a1a"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.2.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "85c768da542fbbd1e1942fedf23054a7",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 32126,
+        "upload_time": "2022-03-26T15:33:08",
+        "upload_time_iso_8601": "2022-03-26T15:33:08.169344Z",
+        "url": "https://files.pythonhosted.org/packages/6c/b3/deb73e2420ac96abb1f922a8b86259c375fd5c49f8a57a4d674a76845cdf/analytix-3.2.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.3.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "db89d181a2f975d9db4a096aeeb1e3221a9cdd44e75ee9ae691eec12c6bc90d3",
+          "md5": "68d01e69fafb9b291a508dbae017dd84",
+          "sha256": "8a09f99f3dcd488d941898fd5b139d436e92e64103fed1dfa87e2d00524a314d"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "68d01e69fafb9b291a508dbae017dd84",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 46259,
+        "upload_time": "2022-04-03T16:27:39",
+        "upload_time_iso_8601": "2022-04-03T16:27:39.342603Z",
+        "url": "https://files.pythonhosted.org/packages/db/89/d181a2f975d9db4a096aeeb1e3221a9cdd44e75ee9ae691eec12c6bc90d3/analytix-3.3.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "34a750f112c2813eb19dfbed5ab0b08d7061024c95b04fca13f5cd3875146f2e",
+          "md5": "66d57ee6f1e3fcef633e19dc53b1e336",
+          "sha256": "0bff95dbc41fac267bd66e8039643dcc1efc4015c0fce041e3b53a4bd23d70d4"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "66d57ee6f1e3fcef633e19dc53b1e336",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 32123,
+        "upload_time": "2022-04-03T16:27:41",
+        "upload_time_iso_8601": "2022-04-03T16:27:41.015886Z",
+        "url": "https://files.pythonhosted.org/packages/34/a7/50f112c2813eb19dfbed5ab0b08d7061024c95b04fca13f5cd3875146f2e/analytix-3.3.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.3.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6ef7312e1939718d2cea41e6f41c939ce9273e7a5994523b08c9ac8ad730c0f3",
+          "md5": "1f9565145a1a076608a13999768ff65d",
+          "sha256": "56ae2166bf5f2c7b41850d809532380c01145a7ff3d40b51d4800771e16f7faa"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "1f9565145a1a076608a13999768ff65d",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 46420,
+        "upload_time": "2022-04-05T20:27:20",
+        "upload_time_iso_8601": "2022-04-05T20:27:20.803700Z",
+        "url": "https://files.pythonhosted.org/packages/6e/f7/312e1939718d2cea41e6f41c939ce9273e7a5994523b08c9ac8ad730c0f3/analytix-3.3.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "3eaee2f7bfc0dd6289c066129609a1fad2bee6d6c49efb6e9a8b066f286b95d3",
+          "md5": "6145f7f90233a876d84cec18b09b85db",
+          "sha256": "b1ebe4574da129551b26e7d3dd9f553496ceb7bf80d0d6804b8df61b49b7e492"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "6145f7f90233a876d84cec18b09b85db",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 32196,
+        "upload_time": "2022-04-05T20:27:22",
+        "upload_time_iso_8601": "2022-04-05T20:27:22.892966Z",
+        "url": "https://files.pythonhosted.org/packages/3e/ae/e2f7bfc0dd6289c066129609a1fad2bee6d6c49efb6e9a8b066f286b95d3/analytix-3.3.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.3.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "29d6954e39d30929c5e508207e4e63d2097639540f5da0b26679734a20d7f71a",
+          "md5": "8c7a328681ec1d4dc049b96c5c7ce106",
+          "sha256": "e6a30c136e4480cfe83d1357616d5bfe4c2aca387982c645592e0be9d9135101"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "8c7a328681ec1d4dc049b96c5c7ce106",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 46896,
+        "upload_time": "2022-04-11T22:23:15",
+        "upload_time_iso_8601": "2022-04-11T22:23:15.677942Z",
+        "url": "https://files.pythonhosted.org/packages/29/d6/954e39d30929c5e508207e4e63d2097639540f5da0b26679734a20d7f71a/analytix-3.3.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "b7b17d6b2220ebec308e86e904edd9c914c30bef20babc0d7df269100c1eacbf",
+          "md5": "1c6b5e337b7fd37bc333ef18e7527a4c",
+          "sha256": "bbc3dc82390217a43794e55834acc9f1e6160f7a75d34c346060c2ced87aa58f"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.3.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "1c6b5e337b7fd37bc333ef18e7527a4c",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 32456,
+        "upload_time": "2022-04-11T22:23:17",
+        "upload_time_iso_8601": "2022-04-11T22:23:17.241159Z",
+        "url": "https://files.pythonhosted.org/packages/b7/b1/7d6b2220ebec308e86e904edd9c914c30bef20babc0d7df269100c1eacbf/analytix-3.3.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.4.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "50bd5065f99112abe5a369e06f2dff7f6598d1d93e78b7e9a95fbf291948d646",
+          "md5": "2e91fd5fef69ad41aba3d6d88fcc3db6",
+          "sha256": "4a914f3a1e9a38326c79582de185b37d4b02d16a673846d331f83dd9faf8ec42"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.4.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "2e91fd5fef69ad41aba3d6d88fcc3db6",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 51966,
+        "upload_time": "2022-04-13T18:47:13",
+        "upload_time_iso_8601": "2022-04-13T18:47:13.393734Z",
+        "url": "https://files.pythonhosted.org/packages/50/bd/5065f99112abe5a369e06f2dff7f6598d1d93e78b7e9a95fbf291948d646/analytix-3.4.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "11f507cae94e80a6d52d4a72e6ee68ae73f2ef02f5af73f5cdb353b69622d4b9",
+          "md5": "1907e0f5ff640b9bac498c5a1306e773",
+          "sha256": "60ed1fdaad39de9060dfb2d8807b4d05d89da1ecabf527b11f9dd33c670684d7"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.4.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "1907e0f5ff640b9bac498c5a1306e773",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 35103,
+        "upload_time": "2022-04-13T18:47:15",
+        "upload_time_iso_8601": "2022-04-13T18:47:15.638117Z",
+        "url": "https://files.pythonhosted.org/packages/11/f5/07cae94e80a6d52d4a72e6ee68ae73f2ef02f5af73f5cdb353b69622d4b9/analytix-3.4.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.5.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "fea4a51c080cc481561018248ac77022cb83c948cf4ebe7f061e5c38ca8b38fa",
+          "md5": "36f5fa441046368c47996c0644fc035b",
+          "sha256": "58f827975e45b608be417afb7f97a0644d18587f1088046796e2f62338ef17ac"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.5.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "36f5fa441046368c47996c0644fc035b",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 287704,
+        "upload_time": "2022-04-15T19:54:22",
+        "upload_time_iso_8601": "2022-04-15T19:54:22.240305Z",
+        "url": "https://files.pythonhosted.org/packages/fe/a4/a51c080cc481561018248ac77022cb83c948cf4ebe7f061e5c38ca8b38fa/analytix-3.5.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a0e556556a43a8be90b3eff261f6fc3f042477cecfb919078c28a5eed90f5c54",
+          "md5": "1c666e7a2bd830acd2e74cd2f9623ef5",
+          "sha256": "00b619bdf91ded2bb6519834756bb4109e91fae964288f64143b602f91263639"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.5.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "1c666e7a2bd830acd2e74cd2f9623ef5",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 273334,
+        "upload_time": "2022-04-15T19:54:23",
+        "upload_time_iso_8601": "2022-04-15T19:54:23.768242Z",
+        "url": "https://files.pythonhosted.org/packages/a0/e5/56556a43a8be90b3eff261f6fc3f042477cecfb919078c28a5eed90f5c54/analytix-3.5.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.5.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "049c346e79cbd8e265c74b612ca524cf2c2d2cff621dbad2e6339b300355732a",
+          "md5": "d16735a2996226a6c1c96e77e10ba6bf",
+          "sha256": "2d6d00bb2a81a621f5b59fa53941df312290b3477537eb5222572ae1dbc516d6"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.5.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "d16735a2996226a6c1c96e77e10ba6bf",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 52006,
+        "upload_time": "2022-08-17T22:21:02",
+        "upload_time_iso_8601": "2022-08-17T22:21:02.309875Z",
+        "url": "https://files.pythonhosted.org/packages/04/9c/346e79cbd8e265c74b612ca524cf2c2d2cff621dbad2e6339b300355732a/analytix-3.5.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6d0113590bcea720169f0792d800bf6118e07689d32a97b075c5334679bf2b3d",
+          "md5": "343f817f4b2f522fbafa1638454b14b5",
+          "sha256": "55caf533b658b35b32428029d029e735900c9caab7377f5bef94a912d9d299ea"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.5.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "343f817f4b2f522fbafa1638454b14b5",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 35834,
+        "upload_time": "2022-08-17T22:21:03",
+        "upload_time_iso_8601": "2022-08-17T22:21:03.654224Z",
+        "url": "https://files.pythonhosted.org/packages/6d/01/13590bcea720169f0792d800bf6118e07689d32a97b075c5334679bf2b3d/analytix-3.5.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.6.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "df84296fd8bed724ac6ba5408cf7347fb4f2ffe8d3cd16ba0d72358f7fd70608",
+          "md5": "b029372069adad190f6fe9df4cebb640",
+          "sha256": "b0a2b82f5cdace130b5d1d1e095d37e99ef0524bcd37727d16c62de48d3841ef"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.6.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "b029372069adad190f6fe9df4cebb640",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 52144,
+        "upload_time": "2022-08-19T01:33:22",
+        "upload_time_iso_8601": "2022-08-19T01:33:22.455980Z",
+        "url": "https://files.pythonhosted.org/packages/df/84/296fd8bed724ac6ba5408cf7347fb4f2ffe8d3cd16ba0d72358f7fd70608/analytix-3.6.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "d40b56e8a59740c117a2b5e86506ec83a4121587516e269b3eb0fbeea9fd5a1f",
+          "md5": "c2369d84d4c033196fa3096ed25e3669",
+          "sha256": "3da3680b4ccb9871217b9cbe9abdc28404ae340de65c0b514c92e937c42a0d8c"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.6.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "c2369d84d4c033196fa3096ed25e3669",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 36069,
+        "upload_time": "2022-08-19T01:33:23",
+        "upload_time_iso_8601": "2022-08-19T01:33:23.670440Z",
+        "url": "https://files.pythonhosted.org/packages/d4/0b/56e8a59740c117a2b5e86506ec83a4121587516e269b3eb0fbeea9fd5a1f/analytix-3.6.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.6.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "19cd73e382e86538bca764876e9fc2af5aeaae6c9dec8ec726407b5a993e43d9",
+          "md5": "647298e711f8c7cb46763c738711b57b",
+          "sha256": "e7dc1610a60b8d1f672081b6706eeb3e4a2b683001a55fae768a19a8ee8c97b6"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.6.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "647298e711f8c7cb46763c738711b57b",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 52148,
+        "upload_time": "2022-10-16T00:27:02",
+        "upload_time_iso_8601": "2022-10-16T00:27:02.196181Z",
+        "url": "https://files.pythonhosted.org/packages/19/cd/73e382e86538bca764876e9fc2af5aeaae6c9dec8ec726407b5a993e43d9/analytix-3.6.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "84459e62f1168c1994762fc6ff279419875edb079c8d29b85771d3a28192c528",
+          "md5": "48b3d2f387f635939ec006eca824c0fa",
+          "sha256": "3a94ec6e33f6ba4f897d8c5e4e279db21f606df9b84ef4bf7c0249743808b746"
+        },
+        "downloads": -1,
+        "filename": "analytix-3.6.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "48b3d2f387f635939ec006eca824c0fa",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 36062,
+        "upload_time": "2022-10-16T00:27:03",
+        "upload_time_iso_8601": "2022-10-16T00:27:03.732774Z",
+        "url": "https://files.pythonhosted.org/packages/84/45/9e62f1168c1994762fc6ff279419875edb079c8d29b85771d3a28192c528/analytix-3.6.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a246eb88dc812a9b02cf756639fbb6e84ccbb25bb4a26a7b572bb756832bdcc1",
+          "md5": "341eeb8b83ca727593cfa3253fa65986",
+          "sha256": "e45e0cb9c35641c6a046a0bd5015c10f9f26c898a4ca73aec0e2c0f8bb2f9746"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "341eeb8b83ca727593cfa3253fa65986",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 66939,
+        "upload_time": "2022-12-29T23:04:53",
+        "upload_time_iso_8601": "2022-12-29T23:04:53.198387Z",
+        "url": "https://files.pythonhosted.org/packages/a2/46/eb88dc812a9b02cf756639fbb6e84ccbb25bb4a26a7b572bb756832bdcc1/analytix-4.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7ca4d6177f660e05ad73339480dc627a163515eb547f395387abd5cf01ef1074",
+          "md5": "5bc2ec21fbf61f50d9127a6bc0415ae0",
+          "sha256": "da74f0f38f80d0780214fd178f220916b7107add564cf40870af92b6903b52e6"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "5bc2ec21fbf61f50d9127a6bc0415ae0",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 48549,
+        "upload_time": "2022-12-29T23:04:54",
+        "upload_time_iso_8601": "2022-12-29T23:04:54.583458Z",
+        "url": "https://files.pythonhosted.org/packages/7c/a4/d6177f660e05ad73339480dc627a163515eb547f395387abd5cf01ef1074/analytix-4.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.0.0rc1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7ef88229509272ae62ec23655c6398cc54f4a637a9972cc3f72f0ccae57cf77e",
+          "md5": "047cfdd57fa46ee8e15a313f09ee2fd2",
+          "sha256": "d606af560e266a8b5b045e7a497d69f426f6a590342a5570dd76a7b6b0e03a77"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0rc1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "047cfdd57fa46ee8e15a313f09ee2fd2",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 50796,
+        "upload_time": "2022-08-26T10:34:52",
+        "upload_time_iso_8601": "2022-08-26T10:34:52.440089Z",
+        "url": "https://files.pythonhosted.org/packages/7e/f8/8229509272ae62ec23655c6398cc54f4a637a9972cc3f72f0ccae57cf77e/analytix-4.0.0rc1-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Development direction has changed since this release"
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "1232de0f567c29565da884d11577a440cdce9b8f97f43272b3b9c1dfa66b6067",
+          "md5": "0fd9f47f87164ad933e6c13ab1b5c7a4",
+          "sha256": "15d245a7c8a4843ba84cd60854c775f85df4eb4c6397237306d71185db86029b"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0rc1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "0fd9f47f87164ad933e6c13ab1b5c7a4",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.12",
+        "size": 37700,
+        "upload_time": "2022-08-26T10:34:53",
+        "upload_time_iso_8601": "2022-08-26T10:34:53.606297Z",
+        "url": "https://files.pythonhosted.org/packages/12/32/de0f567c29565da884d11577a440cdce9b8f97f43272b3b9c1dfa66b6067/analytix-4.0.0rc1.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Development direction has changed since this release"
+      }
+    ],
+    "4.0.0rc2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "a55022557d8a4f9de7e39f38ab2d6f095bb0d48dab30f2a77941421b7811c934",
+          "md5": "469fee2cf176bdfc98b1a6205432a482",
+          "sha256": "13dca357d86958d396ab50a5ed766e75b35639d48019b37db56317e96f085ad9"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0rc2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "469fee2cf176bdfc98b1a6205432a482",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 66163,
+        "upload_time": "2022-12-21T14:26:05",
+        "upload_time_iso_8601": "2022-12-21T14:26:05.626083Z",
+        "url": "https://files.pythonhosted.org/packages/a5/50/22557d8a4f9de7e39f38ab2d6f095bb0d48dab30f2a77941421b7811c934/analytix-4.0.0rc2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "fc55a3ead766434f5722e54b53427d585234dfd31e499c14535cdfa3458eb3d4",
+          "md5": "b389546e0618847379132d517fa94e1a",
+          "sha256": "e9187dc488af834c6686950b4dff7653ee51f57af2879d0ef43fff0d09abfedc"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.0.0rc2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "b389546e0618847379132d517fa94e1a",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 47710,
+        "upload_time": "2022-12-21T14:26:07",
+        "upload_time_iso_8601": "2022-12-21T14:26:07.117725Z",
+        "url": "https://files.pythonhosted.org/packages/fc/55/a3ead766434f5722e54b53427d585234dfd31e499c14535cdfa3458eb3d4/analytix-4.0.0rc2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "32e6431054d3707268eda903f3f30a4d5758ce502fe02755e18f31f37368be50",
+          "md5": "bce29cf49782eaa7d01a3de0cac1e6ce",
+          "sha256": "908d17c97b7130ccc0702d101a251ba602f8805f84cbf775e3d46aa48148c7c1"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "bce29cf49782eaa7d01a3de0cac1e6ce",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 67306,
+        "upload_time": "2023-01-19T21:43:13",
+        "upload_time_iso_8601": "2023-01-19T21:43:13.641866Z",
+        "url": "https://files.pythonhosted.org/packages/32/e6/431054d3707268eda903f3f30a4d5758ce502fe02755e18f31f37368be50/analytix-4.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "e4797eeb74007a5655e1f013afd029018d6b4487067924d984bad6c263c4bc70",
+          "md5": "8950c7813a57e9252087d64cee5bab51",
+          "sha256": "a92e8edb1f60f5d3d375382481adc3f66827f1e76e51541b24b89f9ab58f7463"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "8950c7813a57e9252087d64cee5bab51",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 48935,
+        "upload_time": "2023-01-19T21:43:15",
+        "upload_time_iso_8601": "2023-01-19T21:43:15.293597Z",
+        "url": "https://files.pythonhosted.org/packages/e4/79/7eeb74007a5655e1f013afd029018d6b4487067924d984bad6c263c4bc70/analytix-4.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "8d3dad094d74e38d074e2720eb8926ea171657552ccc191140028fff49eba7fa",
+          "md5": "f4bd80704693e83301fdb94def887f8a",
+          "sha256": "ea6ffe669aafbf55316c0cfdccb857f64b0ebcb914983b82cea04f0f3634d415"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "f4bd80704693e83301fdb94def887f8a",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 67378,
+        "upload_time": "2023-02-06T22:28:34",
+        "upload_time_iso_8601": "2023-02-06T22:28:34.506162Z",
+        "url": "https://files.pythonhosted.org/packages/8d/3d/ad094d74e38d074e2720eb8926ea171657552ccc191140028fff49eba7fa/analytix-4.1.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "344947676ab62599f41e71ab7a33f5ce24585fb9a8d3eb019f192f81b4ad52f6",
+          "md5": "820f738b0ab4c0a04b85f2135d8d41fa",
+          "sha256": "b44c89ba4c2628e8536b029ff48277f7949b081e37b80a0300d5b6282665df80"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "820f738b0ab4c0a04b85f2135d8d41fa",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 48999,
+        "upload_time": "2023-02-06T22:28:36",
+        "upload_time_iso_8601": "2023-02-06T22:28:36.463737Z",
+        "url": "https://files.pythonhosted.org/packages/34/49/47676ab62599f41e71ab7a33f5ce24585fb9a8d3eb019f192f81b4ad52f6/analytix-4.1.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "86b4101b445045ba2db0501ba4d81d5d91d54cb1183e583891c07d4774dff840",
+          "md5": "bd847a11fc1594f881b11bf897ee7924",
+          "sha256": "bb6f982fd6458b178fce4db84bcab9c1d6a755d4e96717f36f996a06c954732d"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "bd847a11fc1594f881b11bf897ee7924",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 68887,
+        "upload_time": "2023-02-15T21:57:29",
+        "upload_time_iso_8601": "2023-02-15T21:57:29.697364Z",
+        "url": "https://files.pythonhosted.org/packages/86/b4/101b445045ba2db0501ba4d81d5d91d54cb1183e583891c07d4774dff840/analytix-4.1.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7597dd67fad41a942290a1eee4f9f5d6c00d64bde95d44c5a374220087ac7b59",
+          "md5": "4489e352be7d9e2088686bcaa3d2cb5e",
+          "sha256": "c86647aa2a072eb6b032453a22e0b43b9b22e065c2705b36b01d0b49f335ea8b"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "4489e352be7d9e2088686bcaa3d2cb5e",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 49487,
+        "upload_time": "2023-02-15T21:57:31",
+        "upload_time_iso_8601": "2023-02-15T21:57:31.208775Z",
+        "url": "https://files.pythonhosted.org/packages/75/97/dd67fad41a942290a1eee4f9f5d6c00d64bde95d44c5a374220087ac7b59/analytix-4.1.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7ee367de8dacafe3ab5554908192721f44626de89ffe5cb1c657719da5ceb853",
+          "md5": "f1be804a937d69a92b0188aefd308591",
+          "sha256": "16aa104a2e0933166d4f0df06626a0ee2b07fc02acbdfe5b0a41fa5f03a16415"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.3-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "f1be804a937d69a92b0188aefd308591",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 69082,
+        "upload_time": "2023-02-17T23:45:38",
+        "upload_time_iso_8601": "2023-02-17T23:45:38.998725Z",
+        "url": "https://files.pythonhosted.org/packages/7e/e3/67de8dacafe3ab5554908192721f44626de89ffe5cb1c657719da5ceb853/analytix-4.1.3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "803cb6c694bb8f0823f44091714189328f8187631037c0e3efb867bbef3d918e",
+          "md5": "03b6e5ad431d529f40d871533b13dec1",
+          "sha256": "ffd92e4d4dc337c4879547ceb94a189b05d9ff69ba573d91c16c9eb097a2a17f"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.3.tar.gz",
+        "has_sig": false,
+        "md5_digest": "03b6e5ad431d529f40d871533b13dec1",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 49723,
+        "upload_time": "2023-02-17T23:45:40",
+        "upload_time_iso_8601": "2023-02-17T23:45:40.797235Z",
+        "url": "https://files.pythonhosted.org/packages/80/3c/b6c694bb8f0823f44091714189328f8187631037c0e3efb867bbef3d918e/analytix-4.1.3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.4": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "d0f1eefddf0bb29910d0dd59de369d28f0c9a9537652393ba74d158d14401b89",
+          "md5": "61cb1efc77965bc633d99d68ca46693f",
+          "sha256": "963f8552e2eafc6ce323a66f8fd72079799325a5a63a1841384b552f8d91b917"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.4-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "61cb1efc77965bc633d99d68ca46693f",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 68973,
+        "upload_time": "2023-02-19T21:43:25",
+        "upload_time_iso_8601": "2023-02-19T21:43:25.582864Z",
+        "url": "https://files.pythonhosted.org/packages/d0/f1/eefddf0bb29910d0dd59de369d28f0c9a9537652393ba74d158d14401b89/analytix-4.1.4-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "26112a1e4a64c111f380682ada77dd63fe1a8b17245402f172bdce316b236a3f",
+          "md5": "f2c17da69d6369afb58ee68950970aac",
+          "sha256": "7b0b8aa5f5260a8c171e17bbd62fafdc2ea81fc45bde0214446ad283015c2452"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.4.tar.gz",
+        "has_sig": false,
+        "md5_digest": "f2c17da69d6369afb58ee68950970aac",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 49720,
+        "upload_time": "2023-02-19T21:43:26",
+        "upload_time_iso_8601": "2023-02-19T21:43:26.920993Z",
+        "url": "https://files.pythonhosted.org/packages/26/11/2a1e4a64c111f380682ada77dd63fe1a8b17245402f172bdce316b236a3f/analytix-4.1.4.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.1.5": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "56ccd9dfa74b17c5f2e4ebc3f96d3c55013ac6ab1a614405d6ba2ce548d6318b",
+          "md5": "0046a527e26d752d1a2bb26150a234a5",
+          "sha256": "b7f89777d7dad73f918418a8220f00e9988601622d7dbac976f2581ca6f175a1"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.5-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "0046a527e26d752d1a2bb26150a234a5",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 69110,
+        "upload_time": "2023-02-25T23:39:35",
+        "upload_time_iso_8601": "2023-02-25T23:39:35.503381Z",
+        "url": "https://files.pythonhosted.org/packages/56/cc/d9dfa74b17c5f2e4ebc3f96d3c55013ac6ab1a614405d6ba2ce548d6318b/analytix-4.1.5-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "95101300d975d165d1c4a58676b8aa8477b618e8d2f33d75aa398fac61ac38ea",
+          "md5": "de5ce8171b928c144025b37c9a1db375",
+          "sha256": "62e2b56472a17507047f95558ec6ea6aa5959e332eeba9aa04dc77cc4c16bfdc"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.1.5.tar.gz",
+        "has_sig": false,
+        "md5_digest": "de5ce8171b928c144025b37c9a1db375",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 50012,
+        "upload_time": "2023-02-25T23:39:37",
+        "upload_time_iso_8601": "2023-02-25T23:39:37.256046Z",
+        "url": "https://files.pythonhosted.org/packages/95/10/1300d975d165d1c4a58676b8aa8477b618e8d2f33d75aa398fac61ac38ea/analytix-4.1.5.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.2.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "0a3fec1969279f83715f2e3846495745f167f86de9e0f784358c099faaaf2b9f",
+          "md5": "731bd757b954b69477107a6bd5d624df",
+          "sha256": "30563c480a11a3cbb70a010f6844ef394629ff592bb1e7c447041b47c6b0a0da"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "731bd757b954b69477107a6bd5d624df",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 70303,
+        "upload_time": "2023-03-27T21:53:02",
+        "upload_time_iso_8601": "2023-03-27T21:53:02.966328Z",
+        "url": "https://files.pythonhosted.org/packages/0a/3f/ec1969279f83715f2e3846495745f167f86de9e0f784358c099faaaf2b9f/analytix-4.2.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "af7ae6cafa1a0fcd18ac924c659dec60eb0d6125846bf3e5ba83f6df318ecbb7",
+          "md5": "d3789910a6f8ae02bcc4b41239137aa7",
+          "sha256": "a5d30b178036e0efc4429940c7b0f3c5bb0be8d5718fed8476ec792b6169c98b"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "d3789910a6f8ae02bcc4b41239137aa7",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 51972,
+        "upload_time": "2023-03-27T21:53:04",
+        "upload_time_iso_8601": "2023-03-27T21:53:04.799173Z",
+        "url": "https://files.pythonhosted.org/packages/af/7a/e6cafa1a0fcd18ac924c659dec60eb0d6125846bf3e5ba83f6df318ecbb7/analytix-4.2.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.2.0rc1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "4812e9b2ddf6946f02cdb9f8f710c9fc1b474e639ac029383564ae14f66f662e",
+          "md5": "a1d53bc9eee554169d98b2a997d7d9fe",
+          "sha256": "7e799265f25c924e4db5b16247303da18aa25811c28d0250bad55870e3005ac7"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.0rc1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "a1d53bc9eee554169d98b2a997d7d9fe",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 71962,
+        "upload_time": "2023-02-11T22:24:05",
+        "upload_time_iso_8601": "2023-02-11T22:24:05.322610Z",
+        "url": "https://files.pythonhosted.org/packages/48/12/e9b2ddf6946f02cdb9f8f710c9fc1b474e639ac029383564ae14f66f662e/analytix-4.2.0rc1-py3-none-any.whl",
+        "yanked": true,
+        "yanked_reason": "Scope for this release has changed"
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "7b200e7a9500fa21a466582934fda72cf1ba24680a708141c5ed083de0994266",
+          "md5": "da428d97a15a2cef0ee6c9dbd0c2c532",
+          "sha256": "132c48c427c17f84f65ba8315519316a4bcec44950ae98e4695725f2f13288ea"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.0rc1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "da428d97a15a2cef0ee6c9dbd0c2c532",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 52061,
+        "upload_time": "2023-02-11T22:24:06",
+        "upload_time_iso_8601": "2023-02-11T22:24:06.939105Z",
+        "url": "https://files.pythonhosted.org/packages/7b/20/0e7a9500fa21a466582934fda72cf1ba24680a708141c5ed083de0994266/analytix-4.2.0rc1.tar.gz",
+        "yanked": true,
+        "yanked_reason": "Scope for this release has changed"
+      }
+    ],
+    "4.2.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "e6ec9d82881576e9b11c858153842bc8c0a0194c5558c53a31e4252c9bb9266a",
+          "md5": "50e60d151f929d8ec178b45e540667a9",
+          "sha256": "f5dd4c7e2b14442230c2c863bbfcfd59f23be31580a6c80f16220c91243ad02f"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "50e60d151f929d8ec178b45e540667a9",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 70403,
+        "upload_time": "2023-05-29T21:18:04",
+        "upload_time_iso_8601": "2023-05-29T21:18:04.208851Z",
+        "url": "https://files.pythonhosted.org/packages/e6/ec/9d82881576e9b11c858153842bc8c0a0194c5558c53a31e4252c9bb9266a/analytix-4.2.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "ad98b1f3cd045dd7da961c6e19c8b9fc628ae358920ed94ace77cb90610c33f9",
+          "md5": "b027c3f32844c1398e68009f18000b80",
+          "sha256": "2a04aa5aa3e439bc8c4c77baf7ed3b0efdf417be7933b7b2a8f635894e023f79"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "b027c3f32844c1398e68009f18000b80",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 52068,
+        "upload_time": "2023-05-29T21:18:06",
+        "upload_time_iso_8601": "2023-05-29T21:18:06.093124Z",
+        "url": "https://files.pythonhosted.org/packages/ad/98/b1f3cd045dd7da961c6e19c8b9fc628ae358920ed94ace77cb90610c33f9/analytix-4.2.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.2.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5252cece29d9f4056f6ca995425e9e9c904a733f6a6bc3279e976f0586ff468b",
+          "md5": "c0bd16622ca6726290f2706f9d017a90",
+          "sha256": "e56f937c1346a77af8faba2bf49380df8c84ea5e2b84cf76bb1c184f8a341b18"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "c0bd16622ca6726290f2706f9d017a90",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 70401,
+        "upload_time": "2023-08-17T09:34:01",
+        "upload_time_iso_8601": "2023-08-17T09:34:01.437802Z",
+        "url": "https://files.pythonhosted.org/packages/52/52/cece29d9f4056f6ca995425e9e9c904a733f6a6bc3279e976f0586ff468b/analytix-4.2.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "326ce0b369e3f037303ef69abbd06508445525687f111b8f79fc8feb809c7fd0",
+          "md5": "582e6284673ff1db2d6e1691ce14d1e9",
+          "sha256": "f87e70b4f6ec2b99f87a00583cefc41b91fd0c06419abc04d97bc3936f00c96c"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "582e6284673ff1db2d6e1691ce14d1e9",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 52043,
+        "upload_time": "2023-08-17T09:34:03",
+        "upload_time_iso_8601": "2023-08-17T09:34:03.214259Z",
+        "url": "https://files.pythonhosted.org/packages/32/6c/e0b369e3f037303ef69abbd06508445525687f111b8f79fc8feb809c7fd0/analytix-4.2.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "4.2.3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "88a2cc5789d5a9a2b258f89642afc4480148c0a2f83eae6165e119fe97daa25d",
+          "md5": "b729836c878078a889854167d782e526",
+          "sha256": "231edaa46c2c21a3a662a447982d152d2c81cf9bf6274d9cbd98f4fe4696dbf4"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.3-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "b729836c878078a889854167d782e526",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 70415,
+        "upload_time": "2023-08-23T20:39:50",
+        "upload_time_iso_8601": "2023-08-23T20:39:50.945617Z",
+        "url": "https://files.pythonhosted.org/packages/88/a2/cc5789d5a9a2b258f89642afc4480148c0a2f83eae6165e119fe97daa25d/analytix-4.2.3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "67083af3b8af24ca6f4db3728f69efce14a52df935bff49edb6ed8a8351d938d",
+          "md5": "e4354c563b085fbe56316e50877742a0",
+          "sha256": "382b5314dd95856d69d93b62c6597edef98ade167e4667ca3ed2f56cfaf26d92"
+        },
+        "downloads": -1,
+        "filename": "analytix-4.2.3.tar.gz",
+        "has_sig": false,
+        "md5_digest": "e4354c563b085fbe56316e50877742a0",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.7.0,<3.13",
+        "size": 52081,
+        "upload_time": "2023-08-23T20:39:52",
+        "upload_time_iso_8601": "2023-08-23T20:39:52.718411Z",
+        "url": "https://files.pythonhosted.org/packages/67/08/3af3b8af24ca6f4db3728f69efce14a52df935bff49edb6ed8a8351d938d/analytix-4.2.3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "ef6c1f85ed1e0e09ddb65413062a73fba71164fa22b630f96ad0904de084e4c5",
+          "md5": "fbcba7d0adb0c317d30067da1c438e25",
+          "sha256": "9b7a086d16f74408a359f2a955c44377edf95f09c1f25280b9c1cdf4bedccd53"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "fbcba7d0adb0c317d30067da1c438e25",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 78057,
+        "upload_time": "2023-11-18T22:05:28",
+        "upload_time_iso_8601": "2023-11-18T22:05:28.149345Z",
+        "url": "https://files.pythonhosted.org/packages/ef/6c/1f85ed1e0e09ddb65413062a73fba71164fa22b630f96ad0904de084e4c5/analytix-5.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "9095248fc719aae0be637c6958c17f9642d72b07ffc954299af56a62ab4b74c8",
+          "md5": "70efce8df2603b9aeb61de3309f57d9f",
+          "sha256": "b540fa631950825a6224269fec16cca44de54c3da510dd8648dfdedc160985d4"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "70efce8df2603b9aeb61de3309f57d9f",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 53474,
+        "upload_time": "2023-11-18T22:05:30",
+        "upload_time_iso_8601": "2023-11-18T22:05:30.163229Z",
+        "url": "https://files.pythonhosted.org/packages/90/95/248fc719aae0be637c6958c17f9642d72b07ffc954299af56a62ab4b74c8/analytix-5.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.0.0rc1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5ba6edb8434d75fd22f9703e5f1d12e1e7a24269b7f3a4aa8bff693fa6eb8218",
+          "md5": "967e9622d4c45a6996d0703bd974f572",
+          "sha256": "bc063441d5a3e8d15def988b4a537093a97371707449b18ff16e17cd83bf98cc"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "967e9622d4c45a6996d0703bd974f572",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.13",
+        "size": 73523,
+        "upload_time": "2023-08-31T22:26:31",
+        "upload_time_iso_8601": "2023-08-31T22:26:31.569597Z",
+        "url": "https://files.pythonhosted.org/packages/5b/a6/edb8434d75fd22f9703e5f1d12e1e7a24269b7f3a4aa8bff693fa6eb8218/analytix-5.0.0rc1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "b496a403535d405ebf40e0e0c1c60c14a72d3d1d1f8bfd9e70944bcbe4fd16f9",
+          "md5": "fa2e5a579fa526253e8b3d1322c223c6",
+          "sha256": "611918265a3eb0d7d557f0c6232540f2ae046dfb3e2ca15d996799138d9bff09"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "fa2e5a579fa526253e8b3d1322c223c6",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.13",
+        "size": 50455,
+        "upload_time": "2023-08-31T22:26:33",
+        "upload_time_iso_8601": "2023-08-31T22:26:33.206399Z",
+        "url": "https://files.pythonhosted.org/packages/b4/96/a403535d405ebf40e0e0c1c60c14a72d3d1d1f8bfd9e70944bcbe4fd16f9/analytix-5.0.0rc1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.0.0rc2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "e52a61a6f2b23228b19e8d81cb45c5da8f7bb7261f0df9f5de1a6f1dbba8aa92",
+          "md5": "df60bc2c1786022501d1a914d6800901",
+          "sha256": "fa1f3fc57fd916140c40825e0f259d27ece83671a65ca75821ad4a1c68569a16"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "df60bc2c1786022501d1a914d6800901",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.13",
+        "size": 73376,
+        "upload_time": "2023-09-01T21:49:15",
+        "upload_time_iso_8601": "2023-09-01T21:49:15.556531Z",
+        "url": "https://files.pythonhosted.org/packages/e5/2a/61a6f2b23228b19e8d81cb45c5da8f7bb7261f0df9f5de1a6f1dbba8aa92/analytix-5.0.0rc2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "18635334a1c190ab95e2c98822599cf5bc10424fe7d43d80773f2396c6f3743e",
+          "md5": "5f7f4c275a9a5b4a1f46435c131bb550",
+          "sha256": "56411df3e1a03316af004cecba38cc627e05364e8d3e96cbf4c2d166124d8d69"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "5f7f4c275a9a5b4a1f46435c131bb550",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.13",
+        "size": 50221,
+        "upload_time": "2023-09-01T21:49:17",
+        "upload_time_iso_8601": "2023-09-01T21:49:17.371835Z",
+        "url": "https://files.pythonhosted.org/packages/18/63/5334a1c190ab95e2c98822599cf5bc10424fe7d43d80773f2396c6f3743e/analytix-5.0.0rc2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.0.0rc3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "19c40971d42511dae137a1c89ec5cc8501e7dbdb18ab6a8854127394f90ec7ea",
+          "md5": "581d386d3d240a9e5901f02b18ef98bc",
+          "sha256": "8003c7b906d68cb07f0acdd223a26de9fa566b0978fcfa8b11cb6145a577ab84"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc3-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "581d386d3d240a9e5901f02b18ef98bc",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 76011,
+        "upload_time": "2023-11-15T14:05:41",
+        "upload_time_iso_8601": "2023-11-15T14:05:41.750911Z",
+        "url": "https://files.pythonhosted.org/packages/19/c4/0971d42511dae137a1c89ec5cc8501e7dbdb18ab6a8854127394f90ec7ea/analytix-5.0.0rc3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "0461663b0620eaf2fe7f5adac4f4d17f8bf6575c004a890f22689976a7004325",
+          "md5": "9d5d3fdfab4b30e56de83ea152db0a09",
+          "sha256": "0d38d21a03d26a3cd99e51017a8e04a71dd222cb57c999e45e2cb189dd449ad4"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.0.0rc3.tar.gz",
+        "has_sig": false,
+        "md5_digest": "9d5d3fdfab4b30e56de83ea152db0a09",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 51684,
+        "upload_time": "2023-11-15T14:05:43",
+        "upload_time_iso_8601": "2023-11-15T14:05:43.573418Z",
+        "url": "https://files.pythonhosted.org/packages/04/61/663b0620eaf2fe7f5adac4f4d17f8bf6575c004a890f22689976a7004325/analytix-5.0.0rc3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "3cd7ea9f67af57e28608816eae9d5724f451153212dc49513f379f44875dc9e1",
+          "md5": "ebe942b29ab7218497ab84d49955f0cc",
+          "sha256": "2626fc1e9e9be54ef5247ad108d1859f2ffcdb5c7d747691d5da553057047412"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "ebe942b29ab7218497ab84d49955f0cc",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 80949,
+        "upload_time": "2024-01-10T22:15:41",
+        "upload_time_iso_8601": "2024-01-10T22:15:41.459646Z",
+        "url": "https://files.pythonhosted.org/packages/3c/d7/ea9f67af57e28608816eae9d5724f451153212dc49513f379f44875dc9e1/analytix-5.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "d39822a35504379957ba6b0e1787347aa4d013d7e2ebc39cc9d447878746c601",
+          "md5": "6fd5889faa8b0fa67bfc2552b62da613",
+          "sha256": "e4c12176ead5cd2831f2b50edeac5e82536d13bf733b978555179ccaae51798c"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "6fd5889faa8b0fa67bfc2552b62da613",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 56504,
+        "upload_time": "2024-01-10T22:15:43",
+        "upload_time_iso_8601": "2024-01-10T22:15:43.710483Z",
+        "url": "https://files.pythonhosted.org/packages/d3/98/22a35504379957ba6b0e1787347aa4d013d7e2ebc39cc9d447878746c601/analytix-5.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.1.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "fcffc76f87496ca4d95368e1fe442027e543e190adcca36e36a66509405783ab",
+          "md5": "6a4aadd32860da0da62a82eacd30b13f",
+          "sha256": "e40e5e21b77dba8fc5d6cbafa8e02daa8441eb7fa870abf5228b575ac651a840"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "6a4aadd32860da0da62a82eacd30b13f",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 80962,
+        "upload_time": "2024-02-08T23:55:56",
+        "upload_time_iso_8601": "2024-02-08T23:55:56.220432Z",
+        "url": "https://files.pythonhosted.org/packages/fc/ff/c76f87496ca4d95368e1fe442027e543e190adcca36e36a66509405783ab/analytix-5.1.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "b1bc41929610eb40eba0fd5951d831d817efc5a29787656577e2a802a6eba3a9",
+          "md5": "63db65302f657091fda436dce6447af8",
+          "sha256": "3154093f656a0bbae78b2e881ca5714d0c5f8986057f7ec81d5045add4a984db"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "63db65302f657091fda436dce6447af8",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 56543,
+        "upload_time": "2024-02-08T23:55:58",
+        "upload_time_iso_8601": "2024-02-08T23:55:58.375761Z",
+        "url": "https://files.pythonhosted.org/packages/b1/bc/41929610eb40eba0fd5951d831d817efc5a29787656577e2a802a6eba3a9/analytix-5.1.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.1.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6c97da85a82c9083782def2389477eeddeb3ea12ca75b4e8c37a4d17762fb79b",
+          "md5": "c752afefe2ae9233782a2e8cf01979ab",
+          "sha256": "72914cddabd06246e24e8050bb59915dd68e3643b8c8ce3a71f20cbede5e5f52"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.2-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "c752afefe2ae9233782a2e8cf01979ab",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 82977,
+        "upload_time": "2024-02-09T17:57:57",
+        "upload_time_iso_8601": "2024-02-09T17:57:57.534854Z",
+        "url": "https://files.pythonhosted.org/packages/6c/97/da85a82c9083782def2389477eeddeb3ea12ca75b4e8c37a4d17762fb79b/analytix-5.1.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "6e55cdac2f35d771c7eb3a226fac2cde5b13ef49375de25cb853b90dfc27bd8a",
+          "md5": "520d2251cdbcd29ad6def0a4e3cac9ba",
+          "sha256": "7bdcb4d3f64cbe1aa2855246bc2b5db0498146d3e720934071ecf5d10dcf8151"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.1.2.tar.gz",
+        "has_sig": false,
+        "md5_digest": "520d2251cdbcd29ad6def0a4e3cac9ba",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 55864,
+        "upload_time": "2024-02-09T17:57:59",
+        "upload_time_iso_8601": "2024-02-09T17:57:59.146427Z",
+        "url": "https://files.pythonhosted.org/packages/6e/55/cdac2f35d771c7eb3a226fac2cde5b13ef49375de25cb853b90dfc27bd8a/analytix-5.1.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.2.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "c1ad352e2b2ecca763cabaa8c365f3edddcd277964416a7fd8726e9eb543fd46",
+          "md5": "fca8f346abe42b29bb27da09313f53f8",
+          "sha256": "3fff23feefdf82a26b7041d0406a71d26d8a128fb57af80c1958a117100c7c48"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.2.0-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "fca8f346abe42b29bb27da09313f53f8",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 83594,
+        "upload_time": "2024-02-10T11:47:36",
+        "upload_time_iso_8601": "2024-02-10T11:47:36.344052Z",
+        "url": "https://files.pythonhosted.org/packages/c1/ad/352e2b2ecca763cabaa8c365f3edddcd277964416a7fd8726e9eb543fd46/analytix-5.2.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "2229db59eb69ab9957853643daad82eaefe01ead94d34f3c472d0d54ceeac19b",
+          "md5": "f8ab6917561ce5b428a68ff1b9e246e8",
+          "sha256": "c40cb4bae292fb24b1420851ba04b3055e69086d02a688f4bb3dc420c72b5fbc"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.2.0.tar.gz",
+        "has_sig": false,
+        "md5_digest": "f8ab6917561ce5b428a68ff1b9e246e8",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.8.0,<3.14",
+        "size": 57249,
+        "upload_time": "2024-02-10T11:47:38",
+        "upload_time_iso_8601": "2024-02-10T11:47:38.722430Z",
+        "url": "https://files.pythonhosted.org/packages/22/29/db59eb69ab9957853643daad82eaefe01ead94d34f3c472d0d54ceeac19b/analytix-5.2.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "5.2.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "5b680fe4a87081ca6d690b093ef818ea9022c74ad054698a51c03ce0fa6ac130",
+          "md5": "a85397f2cb6c68b344c3f79cab9f68e0",
+          "sha256": "74d8cf9eac9886dad6ccdbc5c8d6462d767565df92cc1895444d35296360a3ad"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.2.1-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "a85397f2cb6c68b344c3f79cab9f68e0",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": "<3.14,>=3.8.0",
+        "size": 83843,
+        "upload_time": "2024-06-03T22:14:20",
+        "upload_time_iso_8601": "2024-06-03T22:14:20.425049Z",
+        "url": "https://files.pythonhosted.org/packages/5b/68/0fe4a87081ca6d690b093ef818ea9022c74ad054698a51c03ce0fa6ac130/analytix-5.2.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "blake2b_256": "61301e48961536aa9b124c1fd809fb4f77b767c0d41a599616dd07688cbffcf1",
+          "md5": "ffbd9d9970f7bc2cd40df0b997b23511",
+          "sha256": "d6f7784fabfd2424ce8d2b00d70073b053ae5d209bb3f5d8199bf6bd91a1b286"
+        },
+        "downloads": -1,
+        "filename": "analytix-5.2.1.tar.gz",
+        "has_sig": false,
+        "md5_digest": "ffbd9d9970f7bc2cd40df0b997b23511",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": "<3.14,>=3.8.0",
+        "size": 57647,
+        "upload_time": "2024-06-03T22:14:22",
+        "upload_time_iso_8601": "2024-06-03T22:14:22.571079Z",
+        "url": "https://files.pythonhosted.org/packages/61/30/1e48961536aa9b124c1fd809fb4f77b767c0d41a599616dd07688cbffcf1/analytix-5.2.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ]
+  },
+  "urls": [
+    {
+      "comment_text": "",
+      "digests": {
+        "blake2b_256": "5b680fe4a87081ca6d690b093ef818ea9022c74ad054698a51c03ce0fa6ac130",
+        "md5": "a85397f2cb6c68b344c3f79cab9f68e0",
+        "sha256": "74d8cf9eac9886dad6ccdbc5c8d6462d767565df92cc1895444d35296360a3ad"
+      },
+      "downloads": -1,
+      "filename": "analytix-5.2.1-py3-none-any.whl",
+      "has_sig": false,
+      "md5_digest": "a85397f2cb6c68b344c3f79cab9f68e0",
+      "packagetype": "bdist_wheel",
+      "python_version": "py3",
+      "requires_python": "<3.14,>=3.8.0",
+      "size": 83843,
+      "upload_time": "2024-06-03T22:14:20",
+      "upload_time_iso_8601": "2024-06-03T22:14:20.425049Z",
+      "url": "https://files.pythonhosted.org/packages/5b/68/0fe4a87081ca6d690b093ef818ea9022c74ad054698a51c03ce0fa6ac130/analytix-5.2.1-py3-none-any.whl",
+      "yanked": false,
+      "yanked_reason": null
+    },
+    {
+      "comment_text": "",
+      "digests": {
+        "blake2b_256": "61301e48961536aa9b124c1fd809fb4f77b767c0d41a599616dd07688cbffcf1",
+        "md5": "ffbd9d9970f7bc2cd40df0b997b23511",
+        "sha256": "d6f7784fabfd2424ce8d2b00d70073b053ae5d209bb3f5d8199bf6bd91a1b286"
+      },
+      "downloads": -1,
+      "filename": "analytix-5.2.1.tar.gz",
+      "has_sig": false,
+      "md5_digest": "ffbd9d9970f7bc2cd40df0b997b23511",
+      "packagetype": "sdist",
+      "python_version": "source",
+      "requires_python": "<3.14,>=3.8.0",
+      "size": 57647,
+      "upload_time": "2024-06-03T22:14:22",
+      "upload_time_iso_8601": "2024-06-03T22:14:22.571079Z",
+      "url": "https://files.pythonhosted.org/packages/61/30/1e48961536aa9b124c1fd809fb4f77b767c0d41a599616dd07688cbffcf1/analytix-5.2.1.tar.gz",
+      "yanked": false,
+      "yanked_reason": null
+    }
+  ],
+  "vulnerabilities": []
+}
