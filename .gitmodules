@@ -1,0 +1,3 @@
+[submodule "2425-hikari"]
+	path = 2425-hikari
+	url = github:carberra/carbohydrate
