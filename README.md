@@ -79,6 +79,7 @@ At present, code from episodes published before 2023 is not available.
 | 58 | 21 Oct  2024 | Doctest
 | 59 |  4 Nov  2024 | Enums
 | 60 | 11 Nov  2024 | Hikari
+| 61 | 18 Nov  2024 | Protocols
 
 ## License
 
