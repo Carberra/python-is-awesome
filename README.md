@@ -17,9 +17,9 @@ At present, code from episodes published before 2023 is not available.
 
 ## Episode Guide
 
-| №  | Date        | Topic                        
-|:--:|:-----------:|------------------------------
-|  1 | 27 Dec 2021 | Coloured logging
+| №  | Date         | Topic                        
+|:--:|:------------:|------------------------------
+|  1 | 27 Dec  2021 | Coloured logging
 |  2 | 22 Mar  2022 | Retrieving YouTube analytics
 |  3 | 11 Apr  2022 | Hybrid sync/async functions
 |  4 |  6 May  2022 | if \_\_name__ == "\_\_main__"
