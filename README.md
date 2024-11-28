@@ -15,6 +15,8 @@ git clone --recurse-submodules https://github.com/Carberra/python-is-awesome
 
 At present, code from episodes published before 2023 is not available.
 
+~Crossed out~ topics have updated videos.
+
 ## Episode Guide
 
 | №  | Date         | Topic                        
@@ -25,7 +27,7 @@ At present, code from episodes published before 2023 is not available.
 |  4 |  6 May  2022 | if \_\_name__ == "\_\_main__"
 |  5 | 25 May  2022 | Collections
 |  6 | 27 May  2022 | ~Enums~
-|  7 | 30 May  2022 | Dataclasses
+|  7 | 30 May  2022 | ~Dataclasses~
 |  8 |  4 Jun  2022 | Slots
 |  9 |  9 Jun  2022 | Context managers
 | 10 | 14 Jul  2022 | Generators
@@ -80,6 +82,7 @@ At present, code from episodes published before 2023 is not available.
 | 59 |  4 Nov  2024 | Enums
 | 60 | 11 Nov  2024 | Hikari
 | 61 | 18 Nov  2024 | Protocols
+| 62 |  9 Dec  2024 | Dataclasses
 
 ## License
 
